@@ -74,13 +74,17 @@ interface TcgdexSetFull extends TcgdexSetBrief {
   cards?: TcgdexCardBrief[];
 }
 
-async function apiFetch<T>(path: string): Promise<T> {
-  const lang = await getCardLanguage();
+async function apiFetchWithLang<T>(path: string, lang: string): Promise<T> {
   const response = await fetch(`${BASE_URL}/${lang}${path}`);
   if (!response.ok) {
     throw new Error(`TCGdex API error: ${response.status} ${response.statusText}`);
   }
   return response.json() as Promise<T>;
+}
+
+async function apiFetch<T>(path: string): Promise<T> {
+  const lang = await getCardLanguage();
+  return apiFetchWithLang<T>(path, lang);
 }
 
 function mapSupertype(category?: string): 'Pokémon' | 'Trainer' | 'Energy' {
@@ -213,10 +217,22 @@ async function fetchFullCard(id: string): Promise<PokemonCard> {
   const cached = await getCachedCard(id);
   if (cached) return cached;
 
-  const raw = await apiFetch<TcgdexCardFull>(`/cards/${id}`);
-  const card = mapCard(raw);
-  void setCachedCard(card);
-  return card;
+  const lang = await getCardLanguage();
+  try {
+    const raw = await apiFetchWithLang<TcgdexCardFull>(`/cards/${id}`, lang);
+    const card = mapCard(raw);
+    void setCachedCard(card);
+    return card;
+  } catch {
+    // Card not available in selected language — fall back to English
+    if (lang !== 'en') {
+      const raw = await apiFetchWithLang<TcgdexCardFull>(`/cards/${id}`, 'en');
+      const card = mapCard(raw);
+      void setCachedCard(card);
+      return card;
+    }
+    throw new Error(`Card ${id} not found`);
+  }
 }
 
 export const provider: CardApiProvider = {

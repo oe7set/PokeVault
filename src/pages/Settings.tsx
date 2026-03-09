@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Key, Trash2, Download, Info, ChevronRight, CheckCircle, Database, Globe } from 'lucide-react';
 import { db, getSetting, setSetting } from '@/db/database';
-import { clearProviderCache, clearCardCache } from '@/api/cardApi';
+import { clearProviderCache } from '@/api/cardApi';
 import { Button } from '@/components/ui/Button';
 import { useUIStore } from '@/stores/uiStore';
 import { clsx } from 'clsx';
@@ -61,7 +61,9 @@ export function Settings() {
   const handleCardLanguageChange = async (lang: Locale) => {
     setCardLanguage(lang);
     await setSetting('card_language', lang);
-    await clearCardCache();
+    // Only clear sets cache (set listings should match new language).
+    // Keep cards cache intact — fetchFullCard falls back to English for missing cards.
+    await db.sets_cache.clear();
     addToast(t('settings.cardLanguageChanged'), 'info');
   };
 
