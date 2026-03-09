@@ -2,7 +2,7 @@ import type { PokemonCard, PokemonSet, SearchFilters } from '@/types/pokemon';
 import { getCachedCard, setCachedCard, getSetting } from '@/db/database';
 import type { CardApiProvider, SearchResult } from './cardApi';
 
-const BASE_URL = '/tcgdex-api';
+const BASE_URL = 'https://api.tcgdex.net/v2';
 
 async function getCardLanguage(): Promise<string> {
   return (await getSetting('card_language')) ?? 'en';

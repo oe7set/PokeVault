@@ -2,7 +2,7 @@ import type { PokemonCard, PokemonSet, SearchFilters } from '@/types/pokemon';
 import { db, getCachedCard, setCachedCard, CACHE_TTL } from '@/db/database';
 import type { CardApiProvider } from './cardApi';
 
-const BASE_URL = '/pokemon-tcg-api';
+const BASE_URL = 'https://api.pokemontcg.io/v2';
 
 function getApiKey(): string {
   return import.meta.env.VITE_POKEMON_TCG_API_KEY ?? '';
