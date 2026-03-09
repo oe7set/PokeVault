@@ -6,7 +6,9 @@ import { getCards } from '@/api/cardApi';
 import type { PokemonCard } from '@/types/pokemon';
 import { CollectionStats } from '@/components/collection/CollectionStats';
 import { CardGrid } from '@/components/cards/CardGrid';
+import { ViewModeToggle } from '@/components/cards/ViewModeToggle';
 import { AddCardModal } from '@/components/collection/AddCardModal';
+import { useUIStore } from '@/stores/uiStore';
 import { clsx } from 'clsx';
 import { useTranslation } from '@/i18n/LanguageContext';
 
@@ -14,6 +16,7 @@ type ViewFilter = 'all' | 'owned' | 'wishlist' | 'tradelist';
 
 export function Collection() {
   const { t } = useTranslation();
+  const { cardViewMode } = useUIStore();
   const [viewFilter, setViewFilter] = useState<ViewFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [cards, setCards] = useState<PokemonCard[]>([]);
@@ -57,9 +60,12 @@ export function Collection() {
   return (
     <div className="p-4 space-y-4">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-white font-display">{t('collection.title')}</h1>
-        <p className="text-gray-400 text-sm">{t('collection.cardsTracked', { count: (entries?.length ?? 0).toLocaleString() })}</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white font-display">{t('collection.title')}</h1>
+          <p className="text-gray-400 text-sm">{t('collection.cardsTracked', { count: (entries?.length ?? 0).toLocaleString() })}</p>
+        </div>
+        <ViewModeToggle />
       </div>
 
       {/* Stats */}
@@ -115,6 +121,7 @@ export function Collection() {
       <CardGrid
         cards={filteredCards}
         loading={loading}
+        viewMode={cardViewMode}
       />
 
       <AddCardModal />

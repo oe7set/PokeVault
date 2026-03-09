@@ -79,7 +79,7 @@ export function HandSimulator({ deckCards, cards }: HandSimulatorProps) {
               </span>
             )}
           </div>
-          <div className="grid grid-cols-7 gap-1.5">
+          <div className="grid grid-cols-4 sm:grid-cols-7 gap-1.5">
             {hand.map((cardId, i) => {
               const card = cards.get(cardId);
               return (

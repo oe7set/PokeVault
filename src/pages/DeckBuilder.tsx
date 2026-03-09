@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { Search, ArrowLeft, Sparkles, BarChart2, Download, Library, Hand, AlertTriangle } from 'lucide-react';
+import { Search, ArrowLeft, Sparkles, BarChart2, Download, Library, Hand, AlertTriangle, Layers, X } from 'lucide-react';
 import { db } from '@/db/database';
 import { useDeckStore } from '@/stores/deckStore';
 import { useCollectionStore } from '@/stores/collectionStore';
@@ -34,6 +34,7 @@ export function DeckBuilder() {
   const { addToWishlist } = useCollectionStore();
   const { addToast } = useUIStore();
   const [sidePanel, setSidePanel] = useState<SidePanel>('cards');
+  const [showDeckPanel, setShowDeckPanel] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [deckCards, setDeckCards] = useState<Map<string, PokemonCard>>(new Map());
 
@@ -166,12 +167,11 @@ export function DeckBuilder() {
     { key: 'export' as const, icon: Download, label: t('deckBuilder.export') },
   ];
 
-  return (
-    <div className="flex h-screen overflow-hidden">
-      {/* Left: Deck List */}
-      <div className="w-72 shrink-0 flex flex-col border-r border-card-border bg-surface-50 overflow-y-auto">
-        {/* Header */}
-        <div className="p-4 border-b border-card-border sticky top-0 bg-surface-50 z-10">
+  const sidebarContent = (
+    <>
+      {/* Header */}
+      <div className="p-4 border-b border-card-border sticky top-0 bg-surface-50 z-10">
+        <div className="flex items-center justify-between">
           <button
             onClick={() => navigate('/decks')}
             className="flex items-center gap-2 text-gray-400 hover:text-white text-sm mb-3 transition-colors"
@@ -179,89 +179,126 @@ export function DeckBuilder() {
             <ArrowLeft size={16} />
             {t('deckBuilder.backToDecks')}
           </button>
-          <input
-            value={deck.name}
-            onChange={(e) => void updateDeck(deckId, { name: e.target.value })}
-            className="w-full bg-transparent text-white font-bold text-lg focus:outline-none border-b border-transparent focus:border-accent pb-1"
-          />
-          <div className="flex items-center gap-2 mt-1">
-            <select
-              value={deck.format}
-              onChange={(e) => void updateDeck(deckId, { format: e.target.value as DeckFormat })}
-              className="bg-card-border text-gray-300 text-xs rounded px-2 py-1 focus:outline-none"
-            >
-              <option value="standard">Standard</option>
-              <option value="expanded">Expanded</option>
-              <option value="unlimited">Unlimited</option>
-            </select>
-            <span className={clsx('text-xs font-bold', totalCards === 60 ? 'text-green-400' : 'text-accent')}>
-              {totalCards}/60
-            </span>
-          </div>
-        </div>
-
-        {/* Validation */}
-        {validation && (
-          <div className="px-4 py-3 border-b border-card-border">
-            <DeckValidator validation={validation} />
-          </div>
-        )}
-
-        {/* Missing cards banner */}
-        {totalMissing > 0 && (
           <button
-            onClick={() => setSidePanel('stats')}
-            className="mx-4 mt-2 flex items-center gap-2 bg-yellow-900/20 border border-yellow-700/30 rounded-lg px-3 py-2 text-left hover:bg-yellow-900/30 transition-colors"
+            onClick={() => setShowDeckPanel(false)}
+            className="md:hidden text-gray-400 hover:text-white mb-3"
           >
-            <AlertTriangle size={14} className="text-yellow-400 shrink-0" />
-            <span className="text-[10px] text-yellow-300">
-              {t('deckBuilder.missing', { count: totalMissing })} {totalMissingValue > 0 && `(~$${totalMissingValue.toFixed(2)})`}
-            </span>
+            <X size={18} />
           </button>
-        )}
-
-        {/* Deck Cards */}
-        <div className="flex-1 overflow-y-auto p-3 space-y-3">
-          {Object.entries(groupedDeckCards).map(([supertype, deckCardList]) => {
-            if (deckCardList.length === 0) return null;
-            const count = deckCardList.reduce((s, dc) => s + dc.count, 0);
-            return (
-              <div key={supertype}>
-                <p className="text-xs text-gray-500 font-semibold mb-1.5 flex justify-between">
-                  <span>{supertype}</span>
-                  <span>{count}</span>
-                </p>
-                <div className="space-y-1">
-                  {deckCardList.map((dc) => (
-                    <DeckCardRow
-                      key={dc.cardId}
-                      cardId={dc.cardId}
-                      count={dc.count}
-                      card={deckCards.get(dc.cardId)}
-                      overlay={overlayMap.get(dc.cardId)}
-                      onAdd={() => {
-                        const card = deckCards.get(dc.cardId);
-                        if (card) void handleAddCard(card);
-                      }}
-                      onRemove={() => void handleRemoveCard(dc.cardId)}
-                      onSetCount={(n) => void handleSetCount(dc.cardId, n)}
-                    />
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-
-          {deck.cards.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
-              <p className="text-sm">{t('deckBuilder.emptyDeck')}</p>
-            </div>
-          )}
+        </div>
+        <input
+          value={deck.name}
+          onChange={(e) => void updateDeck(deckId, { name: e.target.value })}
+          className="w-full bg-transparent text-white font-bold text-lg focus:outline-none border-b border-transparent focus:border-accent pb-1"
+        />
+        <div className="flex items-center gap-2 mt-1">
+          <select
+            value={deck.format}
+            onChange={(e) => void updateDeck(deckId, { format: e.target.value as DeckFormat })}
+            className="bg-card-border text-gray-300 text-xs rounded px-2 py-1 focus:outline-none"
+          >
+            <option value="standard">Standard</option>
+            <option value="expanded">Expanded</option>
+            <option value="unlimited">Unlimited</option>
+          </select>
+          <span className={clsx('text-xs font-bold', totalCards === 60 ? 'text-green-400' : 'text-accent')}>
+            {totalCards}/60
+          </span>
         </div>
       </div>
 
+      {/* Validation */}
+      {validation && (
+        <div className="px-4 py-3 border-b border-card-border">
+          <DeckValidator validation={validation} />
+        </div>
+      )}
+
+      {/* Missing cards banner */}
+      {totalMissing > 0 && (
+        <button
+          onClick={() => { setSidePanel('stats'); setShowDeckPanel(false); }}
+          className="mx-4 mt-2 flex items-center gap-2 bg-yellow-900/20 border border-yellow-700/30 rounded-lg px-3 py-2 text-left hover:bg-yellow-900/30 transition-colors"
+        >
+          <AlertTriangle size={14} className="text-yellow-400 shrink-0" />
+          <span className="text-[10px] text-yellow-300">
+            {t('deckBuilder.missing', { count: totalMissing })} {totalMissingValue > 0 && `(~$${totalMissingValue.toFixed(2)})`}
+          </span>
+        </button>
+      )}
+
+      {/* Deck Cards */}
+      <div className="flex-1 overflow-y-auto p-3 space-y-3">
+        {Object.entries(groupedDeckCards).map(([supertype, deckCardList]) => {
+          if (deckCardList.length === 0) return null;
+          const count = deckCardList.reduce((s, dc) => s + dc.count, 0);
+          return (
+            <div key={supertype}>
+              <p className="text-xs text-gray-500 font-semibold mb-1.5 flex justify-between">
+                <span>{supertype}</span>
+                <span>{count}</span>
+              </p>
+              <div className="space-y-1">
+                {deckCardList.map((dc) => (
+                  <DeckCardRow
+                    key={dc.cardId}
+                    cardId={dc.cardId}
+                    count={dc.count}
+                    card={deckCards.get(dc.cardId)}
+                    overlay={overlayMap.get(dc.cardId)}
+                    onAdd={() => {
+                      const card = deckCards.get(dc.cardId);
+                      if (card) void handleAddCard(card);
+                    }}
+                    onRemove={() => void handleRemoveCard(dc.cardId)}
+                    onSetCount={(n) => void handleSetCount(dc.cardId, n)}
+                  />
+                ))}
+              </div>
+            </div>
+          );
+        })}
+
+        {deck.cards.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            <p className="text-sm">{t('deckBuilder.emptyDeck')}</p>
+          </div>
+        )}
+      </div>
+    </>
+  );
+
+  return (
+    <div className="flex flex-col md:flex-row h-screen overflow-hidden">
+      {/* Mobile: Deck toggle bar */}
+      <button
+        onClick={() => setShowDeckPanel(true)}
+        className="md:hidden flex items-center gap-2 bg-surface-50 border-b border-card-border px-4 py-3 shrink-0"
+      >
+        <Layers size={16} className="text-accent" />
+        <span className="text-white text-sm font-medium truncate">{deck.name}</span>
+        <span className={clsx('text-xs font-bold ml-auto', totalCards === 60 ? 'text-green-400' : 'text-accent')}>
+          {totalCards}/60
+        </span>
+      </button>
+
+      {/* Mobile: Deck drawer overlay */}
+      {showDeckPanel && (
+        <div className="fixed inset-0 z-40 md:hidden">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowDeckPanel(false)} />
+          <div className="absolute left-0 top-0 bottom-0 w-80 max-w-[85vw] flex flex-col bg-surface-50 shadow-xl">
+            {sidebarContent}
+          </div>
+        </div>
+      )}
+
+      {/* Desktop: Deck sidebar */}
+      <div className="hidden md:flex md:w-72 md:shrink-0 flex-col border-r border-card-border bg-surface-50 overflow-y-auto">
+        {sidebarContent}
+      </div>
+
       {/* Right: Panels */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {/* Panel tabs */}
         <div className="flex border-b border-card-border bg-[#0d0d1a] shrink-0 overflow-x-auto">
           {tabs.map(({ key, icon: Icon, label }) => (
@@ -276,13 +313,13 @@ export function DeckBuilder() {
               )}
             >
               <Icon size={15} />
-              {label}
+              <span className="hidden sm:inline">{label}</span>
             </button>
           ))}
         </div>
 
         {/* Panel content */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-4">
           {sidePanel === 'cards' && (
             <div className="space-y-3">
               <div className="relative">

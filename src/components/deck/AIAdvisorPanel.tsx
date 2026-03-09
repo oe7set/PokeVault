@@ -143,7 +143,7 @@ export function AIAdvisorPanel({ deck, cardsMap }: AIAdvisorPanelProps) {
 
           {/* Strengths & Weaknesses */}
           {(advice.strengths || advice.weaknesses) && (
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {advice.strengths && advice.strengths.length > 0 && (
                 <div className="bg-green-900/10 border border-green-700/20 rounded-lg p-2">
                   <p className="text-green-400 text-xs font-medium mb-1">{t('ai.strengths')}</p>

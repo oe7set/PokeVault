@@ -27,8 +27,8 @@ interface UIStore {
   removeToast: (id: string) => void;
 
   // View preferences
-  cardViewMode: 'grid' | 'list';
-  setCardViewMode: (mode: 'grid' | 'list') => void;
+  cardViewMode: 'grid' | 'grid-sm' | 'list';
+  setCardViewMode: (mode: 'grid' | 'grid-sm' | 'list') => void;
 
   collectionFilter: 'all' | 'owned' | 'wishlist' | 'tradelist';
   setCollectionFilter: (filter: 'all' | 'owned' | 'wishlist' | 'tradelist') => void;

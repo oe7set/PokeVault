@@ -3,11 +3,14 @@ import { Search, X } from 'lucide-react';
 import { useCardSearch } from '@/hooks/useCardSearch';
 import { CardGrid } from '@/components/cards/CardGrid';
 import { CardFilters } from '@/components/cards/CardFilters';
+import { ViewModeToggle } from '@/components/cards/ViewModeToggle';
+import { useUIStore } from '@/stores/uiStore';
 import type { SearchFilters } from '@/types/pokemon';
 import { useTranslation } from '@/i18n/LanguageContext';
 
 export function CardBrowser() {
   const { t } = useTranslation();
+  const { cardViewMode } = useUIStore();
   const { results, loading, error, filters, updateFilters, loadMore, hasMore, search } = useCardSearch();
 
   // Initial search on mount
@@ -33,11 +36,14 @@ export function CardBrowser() {
   return (
     <div className="p-4 space-y-4">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-white font-display">{t('cardBrowser.title')}</h1>
-        <p className="text-gray-400 text-sm">
-          {results ? t('cardBrowser.cardsFound', { count: results.totalCount.toLocaleString() }) : t('cardBrowser.subtitle')}
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white font-display">{t('cardBrowser.title')}</h1>
+          <p className="text-gray-400 text-sm">
+            {results ? t('cardBrowser.cardsFound', { count: results.totalCount.toLocaleString() }) : t('cardBrowser.subtitle')}
+          </p>
+        </div>
+        <ViewModeToggle />
       </div>
 
       {/* Search bar */}
@@ -80,6 +86,7 @@ export function CardBrowser() {
         loading={loading}
         hasMore={hasMore}
         onLoadMore={loadMore}
+        viewMode={cardViewMode}
       />
     </div>
   );

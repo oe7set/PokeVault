@@ -40,7 +40,7 @@ export function DeckStatsPanel({ stats, deck, missingCards, totalMissingValue }:
   return (
     <div className="space-y-4">
       {/* Summary cards - 2x3 grid */}
-      <div className="grid grid-cols-3 gap-2 text-center">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-center">
         <div className="bg-green-900/20 border border-green-700/30 rounded-lg p-2">
           <p className="text-green-400 font-bold text-xl">{stats.pokemon}</p>
           <p className="text-[10px] text-gray-400">{t('deckStats.pokemon')}</p>
