@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
-import { getSetting, setSetting } from '@/db/database';
+import { getSetting, setSetting, db } from '@/db/database';
 import { translations, type Locale } from './translations';
 
 interface LanguageContextValue {
@@ -30,7 +30,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const setLocale = useCallback((newLocale: Locale) => {
     setLocaleState(newLocale);
     void setSetting('locale', newLocale);
-    void setSetting('card_language', newLocale);
+    void setSetting('card_language', newLocale).then(() => db.sets_cache.clear());
   }, []);
 
   const t = useCallback((key: string, params?: Record<string, string | number>): string => {

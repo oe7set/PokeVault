@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { Search, ArrowLeft, Sparkles, BarChart2, Download, Library, Hand, AlertTriangle, Layers, X } from 'lucide-react';
+import { Search, ArrowLeft, Sparkles, BarChart2, Download, Library, Hand, AlertTriangle, Layers, X, LayoutGrid } from 'lucide-react';
 import { db } from '@/db/database';
 import { useDeckStore } from '@/stores/deckStore';
 import { useCollectionStore } from '@/stores/collectionStore';
@@ -14,6 +14,7 @@ import type { PokemonCard } from '@/types/pokemon';
 import type { DeckFormat } from '@/types/deck';
 import { CardGrid } from '@/components/cards/CardGrid';
 import { CardFilters } from '@/components/cards/CardFilters';
+import { ViewModeToggle } from '@/components/cards/ViewModeToggle';
 import { DeckValidator } from '@/components/deck/DeckValidator';
 import { DeckStatsPanel } from '@/components/deck/DeckStatsPanel';
 import { AIAdvisorPanel } from '@/components/deck/AIAdvisorPanel';
@@ -24,7 +25,7 @@ import { Spinner } from '@/components/ui/Spinner';
 import { clsx } from 'clsx';
 import { useTranslation } from '@/i18n/LanguageContext';
 
-type SidePanel = 'cards' | 'collection' | 'stats' | 'hand' | 'ai' | 'export';
+type SidePanel = 'deck' | 'cards' | 'collection' | 'stats' | 'hand' | 'ai' | 'export';
 
 export function DeckBuilder() {
   const { t } = useTranslation();
@@ -32,8 +33,10 @@ export function DeckBuilder() {
   const navigate = useNavigate();
   const { addCardToDeck, removeCardFromDeck, setCardCount, updateDeck } = useDeckStore();
   const { addToWishlist } = useCollectionStore();
-  const { addToast, setCardDetailId } = useUIStore();
-  const [sidePanel, setSidePanel] = useState<SidePanel>('cards');
+  const { addToast, setCardDetailId, cardViewMode } = useUIStore();
+  const [sidePanel, setSidePanel] = useState<SidePanel>('deck');
+  const [deckSearchQuery, setDeckSearchQuery] = useState('');
+  const [deckTypeFilter, setDeckTypeFilter] = useState<string>('all');
   const [showDeckPanel, setShowDeckPanel] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [deckCards, setDeckCards] = useState<Map<string, PokemonCard>>(new Map());
@@ -105,6 +108,23 @@ export function DeckBuilder() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deck?.cards, deckCards]);
 
+  // Filtered deck cards for the "Deck" tab
+  const filteredDeckCards = useMemo(() => {
+    if (!deck) return [];
+    const allCards = Array.from(deckCards.values()).filter((c) =>
+      deck.cards.some((dc) => dc.cardId === c.id),
+    );
+    let filtered = allCards;
+    if (deckTypeFilter !== 'all') {
+      filtered = filtered.filter((c) => c.supertype === deckTypeFilter);
+    }
+    if (deckSearchQuery.trim()) {
+      const q = deckSearchQuery.toLowerCase();
+      filtered = filtered.filter((c) => c.name.toLowerCase().includes(q));
+    }
+    return filtered;
+  }, [deck, deckCards, deckTypeFilter, deckSearchQuery]);
+
   if (!deck) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -159,6 +179,7 @@ export function DeckBuilder() {
   const totalCards = deck.cards.reduce((s, dc) => s + dc.count, 0);
 
   const tabs = [
+    { key: 'deck' as const, icon: LayoutGrid, label: t('deckBuilder.deckView') },
     { key: 'cards' as const, icon: Search, label: t('deckBuilder.cards') },
     { key: 'collection' as const, icon: Library, label: t('deckBuilder.collection') },
     { key: 'stats' as const, icon: BarChart2, label: t('deckBuilder.stats') },
@@ -321,6 +342,52 @@ export function DeckBuilder() {
 
         {/* Panel content */}
         <div className="flex-1 overflow-y-auto p-3 sm:p-4">
+          {sidePanel === 'deck' && (
+            <div className="space-y-3">
+              <div className="relative">
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  value={deckSearchQuery}
+                  onChange={(e) => setDeckSearchQuery(e.target.value)}
+                  placeholder={t('deckBuilder.filterDeckCards')}
+                  className="w-full bg-card-bg border border-card-border text-white rounded-xl pl-9 pr-4 py-2.5 focus:outline-none focus:border-accent text-sm"
+                />
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex gap-1.5 flex-wrap flex-1">
+                  {['all', 'Pokémon', 'Trainer', 'Energy'].map((type) => (
+                    <button
+                      key={type}
+                      onClick={() => setDeckTypeFilter(type)}
+                      className={clsx(
+                        'px-2.5 py-1 rounded-full text-xs font-medium transition-colors',
+                        deckTypeFilter === type
+                          ? 'bg-accent text-white'
+                          : 'bg-card-border text-gray-400 hover:text-white',
+                      )}
+                    >
+                      {type === 'all' ? t('collection.all') : type}
+                    </button>
+                  ))}
+                </div>
+                <ViewModeToggle />
+              </div>
+              {filteredDeckCards.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <p className="text-sm">{deck.cards.length === 0 ? t('deckBuilder.emptyDeck') : t('deckBuilder.noCardsMatch')}</p>
+                </div>
+              ) : (
+                <CardGrid
+                  cards={filteredDeckCards}
+                  loading={false}
+                  columns={5}
+                  viewMode={cardViewMode}
+                />
+              )}
+            </div>
+          )}
+
           {sidePanel === 'cards' && (
             <div className="space-y-3">
               <div className="relative">
