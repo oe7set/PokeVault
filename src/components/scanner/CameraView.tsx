@@ -3,6 +3,7 @@ import Webcam from 'react-webcam';
 import { Camera, RefreshCw } from 'lucide-react';
 import { clsx } from 'clsx';
 import { Spinner } from '@/components/ui/Spinner';
+import { useTranslation } from '@/i18n/LanguageContext';
 
 interface CameraViewProps {
   onCapture: (imageSrc: string) => void;
@@ -10,13 +11,18 @@ interface CameraViewProps {
 }
 
 export function CameraView({ onCapture, processing = false }: CameraViewProps) {
+  const { t } = useTranslation();
   const webcamRef = useRef<Webcam>(null);
   const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [freezeFrame, setFreezeFrame] = useState<string | null>(null);
 
   const capture = useCallback(() => {
     const imageSrc = webcamRef.current?.getScreenshot();
     if (imageSrc) {
+      // Show freeze-frame briefly for visual feedback
+      setFreezeFrame(imageSrc);
+      setTimeout(() => setFreezeFrame(null), 300);
       onCapture(imageSrc);
     }
   }, [onCapture]);
@@ -31,6 +37,15 @@ export function CameraView({ onCapture, processing = false }: CameraViewProps) {
         </div>
       ) : (
         <div className="relative w-full max-w-md overflow-hidden rounded-xl border-2 border-accent/50 bg-black">
+          {/* Freeze frame overlay */}
+          {freezeFrame && (
+            <img
+              src={freezeFrame}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover z-10 animate-pulse"
+            />
+          )}
+
           <Webcam
             ref={webcamRef}
             audio={false}
@@ -38,8 +53,8 @@ export function CameraView({ onCapture, processing = false }: CameraViewProps) {
             screenshotQuality={0.95}
             videoConstraints={{
               facingMode,
-              width: { ideal: 1280 },
-              height: { ideal: 960 },
+              width: { ideal: 1920 },
+              height: { ideal: 1440 },
             }}
             onUserMediaError={(err) => setCameraError(String(err))}
             className="w-full"
@@ -47,6 +62,14 @@ export function CameraView({ onCapture, processing = false }: CameraViewProps) {
 
           {/* Scan overlay */}
           <div className="absolute inset-0 pointer-events-none">
+            {/* Name region highlight band - top 15-20% */}
+            <div className="absolute top-[8%] left-4 right-4 h-[14%] border border-accent/40 rounded-lg bg-accent/5" />
+            <div className="absolute top-[5%] left-0 right-0 text-center">
+              <span className="text-[10px] text-accent/70 bg-black/50 px-2 py-0.5 rounded">
+                {t('scanner.pointCamera')}
+              </span>
+            </div>
+
             {/* Corner guides */}
             <div className="absolute top-6 left-6 w-12 h-12 border-t-2 border-l-2 border-accent rounded-tl-lg" />
             <div className="absolute top-6 right-6 w-12 h-12 border-t-2 border-r-2 border-accent rounded-tr-lg" />
@@ -54,7 +77,7 @@ export function CameraView({ onCapture, processing = false }: CameraViewProps) {
             <div className="absolute bottom-6 right-6 w-12 h-12 border-b-2 border-r-2 border-accent rounded-br-lg" />
 
             {/* Scan line */}
-            {!processing && (
+            {!processing && !freezeFrame && (
               <div className="absolute left-8 right-8 h-0.5 bg-accent/70 scan-line" />
             )}
 
@@ -63,7 +86,7 @@ export function CameraView({ onCapture, processing = false }: CameraViewProps) {
               <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
                 <div className="text-center">
                   <Spinner size="lg" className="mx-auto mb-3" />
-                  <p className="text-white text-sm">Analyzing card...</p>
+                  <p className="text-white text-sm">{t('scanner.reading')}</p>
                 </div>
               </div>
             )}
@@ -97,10 +120,6 @@ export function CameraView({ onCapture, processing = false }: CameraViewProps) {
 
         <div className="w-12" />
       </div>
-
-      <p className="text-xs text-gray-500 text-center">
-        Point camera at the card name area and tap capture
-      </p>
     </div>
   );
 }
