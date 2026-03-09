@@ -32,7 +32,7 @@ export function DeckBuilder() {
   const navigate = useNavigate();
   const { addCardToDeck, removeCardFromDeck, setCardCount, updateDeck } = useDeckStore();
   const { addToWishlist } = useCollectionStore();
-  const { addToast } = useUIStore();
+  const { addToast, setCardDetailId } = useUIStore();
   const [sidePanel, setSidePanel] = useState<SidePanel>('cards');
   const [showDeckPanel, setShowDeckPanel] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -252,6 +252,7 @@ export function DeckBuilder() {
                     }}
                     onRemove={() => void handleRemoveCard(dc.cardId)}
                     onSetCount={(n) => void handleSetCount(dc.cardId, n)}
+                    onCardClick={() => setCardDetailId(dc.cardId)}
                   />
                 ))}
               </div>

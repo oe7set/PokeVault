@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { ArrowRight, Layers, BookOpen, Camera, Search, Zap, Trophy } from 'lucide-react';
+import { ArrowRight, Layers, BookOpen, Camera, Search, Zap, Trophy, Settings } from 'lucide-react';
 import { db } from '@/db/database';
 import { formatDate } from '@/utils/cardHelpers';
 import type { DeckFormat } from '@/types/deck';
@@ -38,10 +38,17 @@ export function Home() {
           <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center">
             <Zap size={22} className="text-white" />
           </div>
-          <div>
+          <div className="flex-1">
             <h1 className="text-2xl font-bold text-white font-display">PokeVault</h1>
             <p className="text-gray-400 text-sm">{t('home.subtitle')}</p>
           </div>
+          <button
+            onClick={() => navigate('/settings')}
+            className="text-gray-400 hover:text-white transition-colors p-2 rounded-lg hover:bg-card-hover"
+            title={t('nav.settings')}
+          >
+            <Settings size={22} />
+          </button>
         </div>
         <p className="text-gray-300 text-sm mt-3 leading-relaxed">
           {t('home.description')}

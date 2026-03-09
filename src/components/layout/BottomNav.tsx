@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Home, Search, BookOpen, Layers, Settings } from 'lucide-react';
+import { Home, Search, BookOpen, Layers, Camera } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useTranslation } from '@/i18n/LanguageContext';
 
@@ -11,7 +11,7 @@ export function BottomNav() {
     { to: '/cards', icon: Search, label: t('nav.cards') },
     { to: '/collection', icon: BookOpen, label: t('nav.collection') },
     { to: '/decks', icon: Layers, label: t('nav.decks') },
-    { to: '/settings', icon: Settings, label: t('nav.settings') },
+    { to: '/scanner', icon: Camera, label: t('nav.scan') },
   ];
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-surface-50/95 backdrop-blur border-t border-card-border z-40 md:hidden">

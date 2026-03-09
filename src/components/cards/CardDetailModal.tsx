@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Heart, Plus, Minus, Star, Zap, Shield } from 'lucide-react';
+import { Heart, Plus, Minus, Star, Zap, Shield, Maximize2, X } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -19,7 +19,7 @@ export function CardDetailModal() {
   const { addCard, removeCard, toggleWishlist } = useCollectionStore();
   const [card, setCard] = useState<PokemonCard | null>(null);
   const [loading, setLoading] = useState(false);
-  const [imgSide, setImgSide] = useState<'small' | 'large'>('large');
+  const [showFullImage, setShowFullImage] = useState(false);
 
   const collectionEntry = useLiveQuery(
     () => cardDetailId ? db.collection.where('cardId').equals(cardDetailId).first() : undefined,
@@ -56,12 +56,33 @@ export function CardDetailModal() {
         <div className="flex flex-col md:flex-row gap-6 p-6">
           {/* Card Image */}
           <div className="flex flex-col items-center gap-3 md:w-64 shrink-0">
-            <img
-              src={imgSide === 'large' ? card.images.large : card.images.small}
-              alt={card.name}
-              className="w-full max-w-[250px] rounded-xl shadow-2xl cursor-pointer"
-              onClick={() => setImgSide(imgSide === 'large' ? 'small' : 'large')}
-            />
+            <div className="relative group cursor-pointer" onClick={() => setShowFullImage(true)}>
+              <img
+                src={card.images.large || card.images.small}
+                alt={card.name}
+                className="w-full max-w-[250px] rounded-xl shadow-2xl"
+              />
+              <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-colors rounded-xl">
+                <Maximize2 size={24} className="text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg" />
+              </div>
+            </div>
+
+            {/* Fullscreen image overlay */}
+            {showFullImage && (
+              <div
+                className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 cursor-pointer"
+                onClick={() => setShowFullImage(false)}
+              >
+                <button className="absolute top-4 right-4 text-white/70 hover:text-white transition-colors">
+                  <X size={28} />
+                </button>
+                <img
+                  src={card.images.large || card.images.small}
+                  alt={card.name}
+                  className="max-w-[90vw] max-h-[90vh] object-contain rounded-xl"
+                />
+              </div>
+            )}
 
             {/* Collection controls */}
             <div className="w-full space-y-2">

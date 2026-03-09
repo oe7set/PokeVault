@@ -12,6 +12,7 @@ interface DeckCardRowProps {
   onAdd: () => void;
   onRemove: () => void;
   onSetCount: (count: number) => void;
+  onCardClick?: () => void;
 }
 
 const borderColors: Record<string, string> = {
@@ -20,7 +21,7 @@ const borderColors: Record<string, string> = {
   missing: 'border-l-red-500',
 };
 
-export function DeckCardRow({ cardId, count, card, overlay, onAdd, onRemove, onSetCount }: DeckCardRowProps) {
+export function DeckCardRow({ cardId, count, card, overlay, onAdd, onRemove, onSetCount, onCardClick }: DeckCardRowProps) {
   const price = card?.cardmarket?.prices?.averageSellPrice;
 
   return (
@@ -30,11 +31,15 @@ export function DeckCardRow({ cardId, count, card, overlay, onAdd, onRemove, onS
         overlay ? borderColors[overlay.status] : 'border-l-transparent',
       )}
     >
-      {card?.images.small && (
-        <img src={card.images.small} alt={card.name} className="w-7 h-10 object-cover rounded" />
-      )}
-      <div className="flex-1 min-w-0">
-        <p className="text-xs text-white truncate">{card?.name ?? cardId}</p>
+      <div
+        className={clsx('flex items-center gap-2 flex-1 min-w-0', onCardClick && 'cursor-pointer')}
+        onClick={onCardClick}
+      >
+        {card?.images.small && (
+          <img src={card.images.small} alt={card.name} className="w-7 h-10 object-cover rounded shrink-0" />
+        )}
+        <div className="min-w-0">
+          <p className="text-xs text-white truncate">{card?.name ?? cardId}</p>
         <div className="flex items-center gap-1 mt-0.5">
           {card?.types?.map((t) => (
             <Badge key={t} variant="type" type={t} className="text-[9px]">{t}</Badge>
@@ -42,6 +47,7 @@ export function DeckCardRow({ cardId, count, card, overlay, onAdd, onRemove, onS
           {price != null && price > 0 && (
             <span className="text-[9px] text-gray-500 ml-1">${price.toFixed(2)}</span>
           )}
+        </div>
         </div>
       </div>
       <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">

@@ -30,6 +30,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const setLocale = useCallback((newLocale: Locale) => {
     setLocaleState(newLocale);
     void setSetting('locale', newLocale);
+    void setSetting('card_language', newLocale);
   }, []);
 
   const t = useCallback((key: string, params?: Record<string, string | number>): string => {
