@@ -10,8 +10,10 @@ import { db } from '@/db/database';
 import { getCard } from '@/api/cardApi';
 import { useEffect } from 'react';
 import type { PokemonCard } from '@/types/pokemon';
+import { useTranslation } from '@/i18n/LanguageContext';
 
 export function AddCardModal() {
+  const { t } = useTranslation();
   const { addCardModalId, setAddCardModalId, addToast } = useUIStore();
   const { addCard, removeCard, updateEntry } = useCollectionStore();
   const [card, setCard] = useState<PokemonCard | null>(null);
@@ -39,10 +41,10 @@ export function AddCardModal() {
         await addCard(addCardModalId, 1, false, condition);
       }
       await updateEntry(addCardModalId, { condition, notes });
-      addToast('Collection updated', 'success');
+      addToast(t('addCard.updated'), 'success');
       setAddCardModalId(null);
     } catch {
-      addToast('Failed to update', 'error');
+      addToast(t('addCard.failed'), 'error');
     } finally {
       setSaving(false);
     }
@@ -55,7 +57,7 @@ export function AddCardModal() {
     <Modal
       isOpen={!!addCardModalId}
       onClose={() => setAddCardModalId(null)}
-      title={card?.name ?? 'Add to Collection'}
+      title={card?.name ?? t('addCard.addToCollection')}
       size="sm"
     >
       <div className="p-4 space-y-4">
@@ -72,7 +74,7 @@ export function AddCardModal() {
         {/* Quantity controls */}
         <div className="space-y-2">
           <div className="flex items-center justify-between bg-card-border/30 rounded-lg px-3 py-2">
-            <span className="text-sm text-gray-300">Normal</span>
+            <span className="text-sm text-gray-300">{t('addCard.normal')}</span>
             <div className="flex items-center gap-3">
               <button onClick={() => void removeCard(addCardModalId!, 1, false)} className="text-gray-400 hover:text-white w-6 h-6 flex items-center justify-center rounded">-</button>
               <span className="text-white font-bold w-6 text-center">{normalQty}</span>
@@ -80,7 +82,7 @@ export function AddCardModal() {
             </div>
           </div>
           <div className="flex items-center justify-between bg-card-border/30 rounded-lg px-3 py-2">
-            <span className="text-sm text-gray-300">Foil/Holo</span>
+            <span className="text-sm text-gray-300">{t('addCard.foilHolo')}</span>
             <div className="flex items-center gap-3">
               <button onClick={() => void removeCard(addCardModalId!, 1, true)} className="text-gray-400 hover:text-white w-6 h-6 flex items-center justify-center rounded">-</button>
               <span className="text-white font-bold w-6 text-center">{foilQty}</span>
@@ -91,7 +93,7 @@ export function AddCardModal() {
 
         {/* Condition */}
         <div>
-          <p className="text-xs text-gray-500 mb-2">Condition</p>
+          <p className="text-xs text-gray-500 mb-2">{t('addCard.condition')}</p>
           <div className="flex flex-wrap gap-2">
             {(Object.keys(CONDITION_LABELS) as CardCondition[]).map((c) => (
               <button
@@ -109,18 +111,18 @@ export function AddCardModal() {
 
         {/* Notes */}
         <div>
-          <p className="text-xs text-gray-500 mb-2">Notes (optional)</p>
+          <p className="text-xs text-gray-500 mb-2">{t('addCard.notes')}</p>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="e.g. First edition, signed..."
+            placeholder={t('addCard.notesPlaceholder')}
             className="w-full bg-card-border/50 text-gray-200 text-sm rounded-lg px-3 py-2 border border-gray-600 focus:outline-none focus:border-accent resize-none"
             rows={2}
           />
         </div>
 
         <Button onClick={() => void handleSave()} loading={saving} className="w-full">
-          Save to Collection
+          {t('addCard.save')}
         </Button>
       </div>
     </Modal>

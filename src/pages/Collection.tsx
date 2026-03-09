@@ -8,10 +8,12 @@ import { CollectionStats } from '@/components/collection/CollectionStats';
 import { CardGrid } from '@/components/cards/CardGrid';
 import { AddCardModal } from '@/components/collection/AddCardModal';
 import { clsx } from 'clsx';
+import { useTranslation } from '@/i18n/LanguageContext';
 
 type ViewFilter = 'all' | 'owned' | 'wishlist' | 'tradelist';
 
 export function Collection() {
+  const { t } = useTranslation();
   const [viewFilter, setViewFilter] = useState<ViewFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [cards, setCards] = useState<PokemonCard[]>([]);
@@ -46,18 +48,18 @@ export function Collection() {
   }, [cards, searchQuery]);
 
   const filterButtons: { key: ViewFilter; label: string; icon: React.ReactNode }[] = [
-    { key: 'all', label: 'All', icon: <BookOpen size={14} /> },
-    { key: 'owned', label: 'Owned', icon: <Filter size={14} /> },
-    { key: 'wishlist', label: 'Wishlist', icon: <Heart size={14} /> },
-    { key: 'tradelist', label: 'Trade', icon: <ArrowLeftRight size={14} /> },
+    { key: 'all', label: t('collection.all'), icon: <BookOpen size={14} /> },
+    { key: 'owned', label: t('collection.owned'), icon: <Filter size={14} /> },
+    { key: 'wishlist', label: t('collection.wishlist'), icon: <Heart size={14} /> },
+    { key: 'tradelist', label: t('collection.trade'), icon: <ArrowLeftRight size={14} /> },
   ];
 
   return (
     <div className="p-4 space-y-4">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-white font-display">My Collection</h1>
-        <p className="text-gray-400 text-sm">{(entries?.length ?? 0).toLocaleString()} cards tracked</p>
+        <h1 className="text-2xl font-bold text-white font-display">{t('collection.title')}</h1>
+        <p className="text-gray-400 text-sm">{t('collection.cardsTracked', { count: (entries?.length ?? 0).toLocaleString() })}</p>
       </div>
 
       {/* Stats */}
@@ -89,7 +91,7 @@ export function Collection() {
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Filter collection..."
+          placeholder={t('collection.filterPlaceholder')}
           className="w-full bg-card-bg border border-card-border text-white rounded-xl pl-9 pr-4 py-2.5 focus:outline-none focus:border-accent text-sm"
         />
       </div>
@@ -99,12 +101,12 @@ export function Collection() {
         <div className="text-center py-16 text-gray-500">
           <p className="text-4xl mb-4">📦</p>
           <p className="text-lg">
-            {entries?.length === 0 ? 'Your collection is empty' : 'No cards match this filter'}
+            {entries?.length === 0 ? t('collection.empty') : t('collection.noMatch')}
           </p>
           <p className="text-sm mt-1">
             {entries?.length === 0
-              ? 'Browse cards and add them to start building your collection'
-              : 'Try a different filter or search term'}
+              ? t('collection.emptyHint')
+              : t('collection.noMatchHint')}
           </p>
         </div>
       )}

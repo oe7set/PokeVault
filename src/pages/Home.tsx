@@ -4,9 +4,11 @@ import { ArrowRight, Layers, BookOpen, Camera, Search, Zap, Trophy } from 'lucid
 import { db } from '@/db/database';
 import { formatDate } from '@/utils/cardHelpers';
 import type { DeckFormat } from '@/types/deck';
+import { useTranslation } from '@/i18n/LanguageContext';
 
 export function Home() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const decks = useLiveQuery(() => db.decks.orderBy('updatedAt').reverse().limit(3).toArray(), []);
   const collectionEntries = useLiveQuery(() => db.collection.count(), []);
@@ -38,11 +40,11 @@ export function Home() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-white font-display">PokeVault</h1>
-            <p className="text-gray-400 text-sm">Your TCG command center</p>
+            <p className="text-gray-400 text-sm">{t('home.subtitle')}</p>
           </div>
         </div>
         <p className="text-gray-300 text-sm mt-3 leading-relaxed">
-          Build competitive decks, track your collection, get AI-powered advice, and scan physical cards.
+          {t('home.description')}
         </p>
       </div>
 
@@ -50,27 +52,27 @@ export function Home() {
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-card-bg border border-card-border rounded-xl p-4 text-center">
           <p className="text-2xl font-bold text-white">{(totalCards ?? 0).toLocaleString()}</p>
-          <p className="text-xs text-gray-400 mt-1">Cards Owned</p>
+          <p className="text-xs text-gray-400 mt-1">{t('home.cardsOwned')}</p>
         </div>
         <div className="bg-card-bg border border-card-border rounded-xl p-4 text-center">
           <p className="text-2xl font-bold text-white">{(collectionEntries ?? 0).toLocaleString()}</p>
-          <p className="text-xs text-gray-400 mt-1">Unique Cards</p>
+          <p className="text-xs text-gray-400 mt-1">{t('home.uniqueCards')}</p>
         </div>
         <div className="bg-card-bg border border-card-border rounded-xl p-4 text-center">
           <p className="text-2xl font-bold text-white">{deckCount ?? 0}</p>
-          <p className="text-xs text-gray-400 mt-1">Decks</p>
+          <p className="text-xs text-gray-400 mt-1">{t('home.decks')}</p>
         </div>
       </div>
 
       {/* Quick Actions */}
       <div>
-        <h2 className="text-sm font-semibold text-gray-400 mb-3">Quick Actions</h2>
+        <h2 className="text-sm font-semibold text-gray-400 mb-3">{t('home.quickActions')}</h2>
         <div className="grid grid-cols-2 gap-3">
           {[
-            { icon: Search, label: 'Browse Cards', desc: 'Search the full TCG database', to: '/cards', color: 'from-blue-900/40 to-blue-800/20 border-blue-700/30' },
-            { icon: Layers, label: 'Build Deck', desc: 'Create or edit a deck', to: '/decks', color: 'from-red-900/40 to-red-800/20 border-red-700/30' },
-            { icon: BookOpen, label: 'My Collection', desc: 'View your card collection', to: '/collection', color: 'from-green-900/40 to-green-800/20 border-green-700/30' },
-            { icon: Camera, label: 'Scan Card', desc: 'Use camera to add cards', to: '/scanner', color: 'from-purple-900/40 to-purple-800/20 border-purple-700/30' },
+            { icon: Search, label: t('home.browseCards'), desc: t('home.browseCardsDesc'), to: '/cards', color: 'from-blue-900/40 to-blue-800/20 border-blue-700/30' },
+            { icon: Layers, label: t('home.buildDeck'), desc: t('home.buildDeckDesc'), to: '/decks', color: 'from-red-900/40 to-red-800/20 border-red-700/30' },
+            { icon: BookOpen, label: t('home.myCollection'), desc: t('home.myCollectionDesc'), to: '/collection', color: 'from-green-900/40 to-green-800/20 border-green-700/30' },
+            { icon: Camera, label: t('home.scanCard'), desc: t('home.scanCardDesc'), to: '/scanner', color: 'from-purple-900/40 to-purple-800/20 border-purple-700/30' },
           ].map(({ icon: Icon, label, desc, to, color }) => (
             <button
               key={to}
@@ -89,12 +91,12 @@ export function Home() {
       {decks && decks.length > 0 && (
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-gray-400">Recent Decks</h2>
+            <h2 className="text-sm font-semibold text-gray-400">{t('home.recentDecks')}</h2>
             <button
               onClick={() => navigate('/decks')}
               className="text-xs text-accent hover:text-accent-hover flex items-center gap-1"
             >
-              View all <ArrowRight size={12} />
+              {t('home.viewAll')} <ArrowRight size={12} />
             </button>
           </div>
           <div className="space-y-2">
@@ -131,12 +133,12 @@ export function Home() {
       {(collectionEntries ?? 0) === 0 && (deckCount ?? 0) === 0 && (
         <div className="bg-card-bg border border-dashed border-card-border rounded-2xl p-6 text-center">
           <p className="text-4xl mb-3">🎴</p>
-          <h3 className="text-white font-semibold mb-2">Getting Started</h3>
+          <h3 className="text-white font-semibold mb-2">{t('home.gettingStarted')}</h3>
           <div className="text-gray-400 text-sm space-y-2 text-left max-w-xs mx-auto">
-            <p>1️⃣ Browse cards and add them to your collection</p>
-            <p>2️⃣ Create a deck and search for cards to add</p>
-            <p>3️⃣ Use AI Tips to optimize your deck</p>
-            <p>4️⃣ Add your Anthropic API key in Settings for AI features</p>
+            <p>{t('home.step1')}</p>
+            <p>{t('home.step2')}</p>
+            <p>{t('home.step3')}</p>
+            <p>{t('home.step4')}</p>
           </div>
         </div>
       )}

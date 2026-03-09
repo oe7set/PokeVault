@@ -1,16 +1,18 @@
 import { NavLink } from 'react-router-dom';
 import { Home, Search, BookOpen, Layers, Camera } from 'lucide-react';
 import { clsx } from 'clsx';
-
-const navItems = [
-  { to: '/', icon: Home, label: 'Home', exact: true },
-  { to: '/cards', icon: Search, label: 'Cards' },
-  { to: '/collection', icon: BookOpen, label: 'Collection' },
-  { to: '/decks', icon: Layers, label: 'Decks' },
-  { to: '/scanner', icon: Camera, label: 'Scan' },
-];
+import { useTranslation } from '@/i18n/LanguageContext';
 
 export function BottomNav() {
+  const { t } = useTranslation();
+
+  const navItems = [
+    { to: '/', icon: Home, label: t('nav.home'), exact: true },
+    { to: '/cards', icon: Search, label: t('nav.cards') },
+    { to: '/collection', icon: BookOpen, label: t('nav.collection') },
+    { to: '/decks', icon: Layers, label: t('nav.decks') },
+    { to: '/scanner', icon: Camera, label: t('nav.scan') },
+  ];
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-surface-50/95 backdrop-blur border-t border-card-border z-40 md:hidden">
       <div className="flex items-stretch h-16">

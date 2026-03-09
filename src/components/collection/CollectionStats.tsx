@@ -1,7 +1,9 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/db/database';
 import { BookOpen, Layers, Star, Heart } from 'lucide-react';
+import { useTranslation } from '@/i18n/LanguageContext';
 export function CollectionStats() {
+  const { t } = useTranslation();
   const entries = useLiveQuery(() => db.collection.toArray(), []);
 
   if (!entries) return null;
@@ -13,10 +15,10 @@ export function CollectionStats() {
   const wishlistCount = entries.filter((e) => e.inWishlist).length;
 
   const stats = [
-    { icon: BookOpen, label: 'Total Cards', value: totalCards, color: 'text-blue-400' },
-    { icon: Star, label: 'Unique Cards', value: uniqueCards, color: 'text-yellow-400' },
-    { icon: Layers, label: 'Foil/Holo', value: totalFoil, color: 'text-purple-400' },
-    { icon: Heart, label: 'Wishlist', value: wishlistCount, color: 'text-pink-400' },
+    { icon: BookOpen, label: t('stats.totalCards'), value: totalCards, color: 'text-blue-400' },
+    { icon: Star, label: t('stats.uniqueCards'), value: uniqueCards, color: 'text-yellow-400' },
+    { icon: Layers, label: t('stats.foilHolo'), value: totalFoil, color: 'text-purple-400' },
+    { icon: Heart, label: t('stats.wishlist'), value: wishlistCount, color: 'text-pink-400' },
   ];
 
   return (

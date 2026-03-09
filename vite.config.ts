@@ -20,7 +20,7 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/pokemon-tcg-api/, ''),
       },
       '/tcgdex-api': {
-        target: 'https://api.tcgdex.net/v2/en',
+        target: 'https://api.tcgdex.net/v2',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/tcgdex-api/, ''),
       },

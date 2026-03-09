@@ -9,6 +9,7 @@ import { searchCards } from '@/api/cardApi';
 import { useUIStore } from '@/stores/uiStore';
 import { useDeckStore } from '@/stores/deckStore';
 import type { SearchFilters } from '@/types/pokemon';
+import { useTranslation } from '@/i18n/LanguageContext';
 
 interface DeckImportExportProps {
   deck: Deck;
@@ -16,6 +17,7 @@ interface DeckImportExportProps {
 }
 
 export function DeckImportExport({ deck, cardsMap }: DeckImportExportProps) {
+  const { t } = useTranslation();
   const [showImport, setShowImport] = useState(false);
   const [importText, setImportText] = useState('');
   const [importing, setImporting] = useState(false);
@@ -28,7 +30,7 @@ export function DeckImportExport({ deck, cardsMap }: DeckImportExportProps) {
     await copyToClipboard(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-    addToast('Deck list copied to clipboard!', 'success');
+    addToast(t('importExport.deckCopied'), 'success');
   };
 
   const handleImport = async () => {
@@ -62,11 +64,11 @@ export function DeckImportExport({ deck, cardsMap }: DeckImportExportProps) {
         }
       }
 
-      addToast(`Imported ${parsed.length} cards`, 'success');
+      addToast(t('importExport.imported', { count: parsed.length }), 'success');
       setShowImport(false);
       setImportText('');
     } catch {
-      addToast('Import failed — check format', 'error');
+      addToast(t('importExport.importFailed'), 'error');
     } finally {
       setImporting(false);
     }
@@ -77,18 +79,18 @@ export function DeckImportExport({ deck, cardsMap }: DeckImportExportProps) {
       <div className="flex gap-2">
         <Button variant="secondary" size="sm" onClick={() => void handleExport()} className="flex-1">
           {copied ? <Check size={14} /> : <Copy size={14} />}
-          {copied ? 'Copied!' : 'Export'}
+          {copied ? t('importExport.copied') : t('importExport.export')}
         </Button>
         <Button variant="secondary" size="sm" onClick={() => setShowImport(true)} className="flex-1">
           <Upload size={14} />
-          Import
+          {t('importExport.import')}
         </Button>
       </div>
 
-      <Modal isOpen={showImport} onClose={() => setShowImport(false)} title="Import Deck (PTCGL Format)" size="md">
+      <Modal isOpen={showImport} onClose={() => setShowImport(false)} title={t('importExport.importDeck')} size="md">
         <div className="p-4 space-y-3">
           <p className="text-xs text-gray-400">
-            Paste a PTCGL/PTCGO deck export. Format: <code className="text-gray-300">4 Charizard ex OBF 125</code>
+            {t('importExport.importHint')} <code className="text-gray-300">4 Charizard ex OBF 125</code>
           </p>
           <textarea
             value={importText}
@@ -98,11 +100,11 @@ export function DeckImportExport({ deck, cardsMap }: DeckImportExportProps) {
           />
           <div className="flex gap-2">
             <Button variant="ghost" size="sm" onClick={() => setShowImport(false)} className="flex-1">
-              Cancel
+              {t('importExport.cancel')}
             </Button>
             <Button size="sm" loading={importing} onClick={() => void handleImport()} className="flex-1">
               <Download size={14} />
-              Import Cards
+              {t('importExport.importCards')}
             </Button>
           </div>
         </div>

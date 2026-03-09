@@ -1,16 +1,18 @@
 import { AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
 import type { DeckValidationResult } from '@/types/deck';
+import { useTranslation } from '@/i18n/LanguageContext';
 
 interface DeckValidatorProps {
   validation: DeckValidationResult;
 }
 
 export function DeckValidator({ validation }: DeckValidatorProps) {
+  const { t } = useTranslation();
   return (
     <div className="space-y-2">
       {/* Total count */}
       <div className="flex items-center justify-between text-sm">
-        <span className="text-gray-400">Total Cards</span>
+        <span className="text-gray-400">{t('validator.totalCards')}</span>
         <span className={validation.totalCards === 60 ? 'text-green-400 font-bold' : 'text-accent font-bold'}>
           {validation.totalCards}/60
         </span>
@@ -31,12 +33,12 @@ export function DeckValidator({ validation }: DeckValidatorProps) {
         {validation.valid ? (
           <>
             <CheckCircle size={16} className="text-green-400" />
-            <span className="text-green-400 text-sm font-medium">Deck is valid!</span>
+            <span className="text-green-400 text-sm font-medium">{t('validator.deckValid')}</span>
           </>
         ) : (
           <>
             <XCircle size={16} className="text-red-400" />
-            <span className="text-red-400 text-sm font-medium">Deck has issues</span>
+            <span className="text-red-400 text-sm font-medium">{t('validator.deckHasIssues')}</span>
           </>
         )}
       </div>

@@ -6,6 +6,7 @@ import { searchCards } from '@/api/cardApi';
 import type { PokemonCard, SearchFilters } from '@/types/pokemon';
 import { Spinner } from '@/components/ui/Spinner';
 import { Button } from '@/components/ui/Button';
+import { useTranslation } from '@/i18n/LanguageContext';
 
 type ScanMode = 'camera' | 'manual';
 
@@ -35,6 +36,7 @@ async function runOCR(imageDataUrl: string): Promise<string> {
 }
 
 export function Scanner() {
+  const { t } = useTranslation();
   const [mode, setMode] = useState<ScanMode>('camera');
   const [processing, setProcessing] = useState(false);
   const [ocrText, setOcrText] = useState('');
@@ -75,14 +77,14 @@ export function Scanner() {
 
         await searchByName(cleanText.slice(0, 30));
       } else {
-        setError('Could not read card name. Try manual search.');
+        setError(t('scanner.cannotRead'));
       }
     } catch {
-      setError('Scan failed. Try manual search.');
+      setError(t('scanner.scanFailed'));
     } finally {
       setProcessing(false);
     }
-  }, [searchByName]);
+  }, [searchByName, t]);
 
   const handleReset = () => {
     setResults(null);
@@ -106,8 +108,8 @@ export function Scanner() {
     <div className="p-4 space-y-4 max-w-lg mx-auto">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-white font-display">Card Scanner</h1>
-        <p className="text-gray-400 text-sm">Scan physical cards to add them to your collection</p>
+        <h1 className="text-2xl font-bold text-white font-display">{t('scanner.title')}</h1>
+        <p className="text-gray-400 text-sm">{t('scanner.subtitle')}</p>
       </div>
 
       {/* Mode tabs */}
@@ -119,7 +121,7 @@ export function Scanner() {
           }`}
         >
           <Camera size={16} />
-          Camera Scan
+          {t('scanner.cameraScan')}
         </button>
         <button
           onClick={() => { setMode('manual'); handleReset(); }}
@@ -128,7 +130,7 @@ export function Scanner() {
           }`}
         >
           <Search size={16} />
-          Manual Search
+          {t('scanner.manualSearch')}
         </button>
       </div>
 
@@ -143,14 +145,14 @@ export function Scanner() {
 
               {/* Manual fallback */}
               <div className="border-t border-card-border pt-4">
-                <p className="text-xs text-gray-500 mb-2 text-center">Or search manually if scan fails</p>
+                <p className="text-xs text-gray-500 mb-2 text-center">{t('scanner.manualFallback')}</p>
                 <div className="flex gap-2">
                   <input
                     type="text"
                     value={manualQuery}
                     onChange={(e) => setManualQuery(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && void handleManualSearch()}
-                    placeholder="Card name..."
+                    placeholder={t('scanner.cardName')}
                     className="flex-1 bg-card-bg border border-card-border text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-accent"
                   />
                   <Button size="sm" onClick={() => void handleManualSearch()} loading={processing}>
@@ -169,17 +171,17 @@ export function Scanner() {
                   value={manualQuery}
                   onChange={(e) => setManualQuery(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && void handleManualSearch()}
-                  placeholder="Search card by name..."
+                  placeholder={t('scanner.searchByName')}
                   autoFocus
                   className="flex-1 bg-card-bg border border-card-border text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent"
                 />
                 <Button onClick={() => void handleManualSearch()} loading={processing}>
                   <Search size={16} />
-                  Search
+                  {t('scanner.search')}
                 </Button>
               </div>
               <p className="text-xs text-gray-500 text-center">
-                Type the card name and press Enter or Search
+                {t('scanner.searchHint')}
               </p>
             </div>
           )}
@@ -188,7 +190,7 @@ export function Scanner() {
             <div className="flex flex-col items-center gap-3 py-6">
               <Spinner />
               <p className="text-sm text-gray-400">
-                {mode === 'camera' ? 'Reading card...' : 'Searching...'}
+                {mode === 'camera' ? t('scanner.reading') : t('scanner.searching')}
               </p>
             </div>
           )}
@@ -203,13 +205,13 @@ export function Scanner() {
 
       {/* Tips */}
       <div className="bg-card-bg border border-card-border rounded-xl p-4">
-        <p className="text-xs font-semibold text-gray-400 mb-2">📸 Tips for best results</p>
+        <p className="text-xs font-semibold text-gray-400 mb-2">📸 {t('scanner.tips')}</p>
         <ul className="text-xs text-gray-500 space-y-1">
-          <li>• Place card on a flat, contrasting surface</li>
-          <li>• Ensure good lighting without glare</li>
-          <li>• Hold camera steady and close to the card</li>
-          <li>• Card name should be clearly visible</li>
-          <li>• Use manual search if scan doesn't work</li>
+          <li>• {t('scanner.tip1')}</li>
+          <li>• {t('scanner.tip2')}</li>
+          <li>• {t('scanner.tip3')}</li>
+          <li>• {t('scanner.tip4')}</li>
+          <li>• {t('scanner.tip5')}</li>
         </ul>
       </div>
     </div>

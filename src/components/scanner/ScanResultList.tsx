@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { useCollectionStore } from '@/stores/collectionStore';
 import { useUIStore } from '@/stores/uiStore';
+import { useTranslation } from '@/i18n/LanguageContext';
 
 interface ScanResultListProps {
   cards: PokemonCard[];
@@ -12,12 +13,13 @@ interface ScanResultListProps {
 }
 
 export function ScanResultList({ cards, ocrText, onReset }: ScanResultListProps) {
+  const { t } = useTranslation();
   const { addCard } = useCollectionStore();
   const { addToast } = useUIStore();
 
   const handleAdd = async (card: PokemonCard) => {
     await addCard(card.id);
-    addToast(`Added ${card.name} to collection!`, 'success');
+    addToast(t('scanner.addedToCollection', { name: card.name }), 'success');
     onReset();
   };
 
@@ -25,13 +27,13 @@ export function ScanResultList({ cards, ocrText, onReset }: ScanResultListProps)
     return (
       <div className="text-center py-8">
         <p className="text-4xl mb-3">😕</p>
-        <p className="text-gray-300 font-medium">No cards found</p>
+        <p className="text-gray-300 font-medium">{t('scanner.noCards')}</p>
         {ocrText && (
-          <p className="text-gray-500 text-sm mt-1">OCR detected: "{ocrText}"</p>
+          <p className="text-gray-500 text-sm mt-1">{t('scanner.ocrDetected', { text: ocrText })}</p>
         )}
-        <p className="text-gray-500 text-sm mt-2">Try better lighting or use manual search</p>
+        <p className="text-gray-500 text-sm mt-2">{t('scanner.tryBetter')}</p>
         <Button variant="secondary" size="sm" className="mt-4" onClick={onReset}>
-          Try Again
+          {t('scanner.tryAgain')}
         </Button>
       </div>
     );
@@ -40,9 +42,9 @@ export function ScanResultList({ cards, ocrText, onReset }: ScanResultListProps)
   return (
     <div className="space-y-3">
       {ocrText && (
-        <p className="text-xs text-gray-500">Detected text: "<span className="text-gray-300">{ocrText}</span>"</p>
+        <p className="text-xs text-gray-500">{t('scanner.detectedText')} "<span className="text-gray-300">{ocrText}</span>"</p>
       )}
-      <p className="text-sm text-gray-400">Select the matching card:</p>
+      <p className="text-sm text-gray-400">{t('scanner.selectMatch')}</p>
 
       {cards.map((card) => (
         <div
@@ -72,13 +74,13 @@ export function ScanResultList({ cards, ocrText, onReset }: ScanResultListProps)
             className="shrink-0"
           >
             <Plus size={14} />
-            Add
+            {t('cardDetail.add')}
           </Button>
         </div>
       ))}
 
       <Button variant="ghost" size="sm" onClick={onReset} className="w-full">
-        Scan Another Card
+        {t('scanner.scanAnother')}
       </Button>
     </div>
   );

@@ -5,6 +5,7 @@ import type { DeckCard } from '@/types/deck';
 import type { PokemonCard } from '@/types/pokemon';
 import { simulateHand, runMulliganSimulation } from '@/utils/deckSimulator';
 import { Button } from '@/components/ui/Button';
+import { useTranslation } from '@/i18n/LanguageContext';
 
 interface HandSimulatorProps {
   deckCards: DeckCard[];
@@ -12,6 +13,7 @@ interface HandSimulatorProps {
 }
 
 export function HandSimulator({ deckCards, cards }: HandSimulatorProps) {
+  const { t } = useTranslation();
   const [hand, setHand] = useState<string[]>([]);
   const [isMulligan, setIsMulligan] = useState(false);
   const [totalDraws, setTotalDraws] = useState(0);
@@ -52,16 +54,16 @@ export function HandSimulator({ deckCards, cards }: HandSimulatorProps) {
       <div className="flex items-center gap-2">
         <Button onClick={drawHand} size="sm">
           <RefreshCw size={14} />
-          {hand.length > 0 ? 'Redraw' : 'Draw Hand'}
+          {hand.length > 0 ? t('handSim.redraw') : t('handSim.drawHand')}
         </Button>
         <Button onClick={runSimulation} variant="secondary" size="sm" disabled={simRunning}>
           <Play size={14} />
-          {simRunning ? 'Running...' : 'Run 1000 Sims'}
+          {simRunning ? t('handSim.running') : t('handSim.runSims')}
         </Button>
         {totalDraws > 0 && (
           <Button onClick={resetStats} variant="ghost" size="sm">
             <RotateCcw size={14} />
-            Reset
+            {t('handSim.reset')}
           </Button>
         )}
       </div>
@@ -70,7 +72,7 @@ export function HandSimulator({ deckCards, cards }: HandSimulatorProps) {
       {hand.length > 0 && (
         <div>
           <div className="flex items-center gap-2 mb-2">
-            <p className="text-xs text-gray-400">Opening Hand</p>
+            <p className="text-xs text-gray-400">{t('handSim.openingHand')}</p>
             {isMulligan && (
               <span className="text-[10px] font-bold bg-red-600 text-white px-2 py-0.5 rounded">
                 MULLIGAN
@@ -110,29 +112,29 @@ export function HandSimulator({ deckCards, cards }: HandSimulatorProps) {
       <div className="grid grid-cols-3 gap-2">
         <div className="bg-card-bg border border-card-border rounded-lg p-3 text-center">
           <p className="text-lg font-bold text-white">{totalDraws}</p>
-          <p className="text-[10px] text-gray-400">Total Draws</p>
+          <p className="text-[10px] text-gray-400">{t('handSim.totalDraws')}</p>
         </div>
         <div className="bg-card-bg border border-card-border rounded-lg p-3 text-center">
           <p className="text-lg font-bold text-red-400">{mulliganCount}</p>
-          <p className="text-[10px] text-gray-400">Mulligans</p>
+          <p className="text-[10px] text-gray-400">{t('handSim.mulligans')}</p>
         </div>
         <div className="bg-card-bg border border-card-border rounded-lg p-3 text-center">
           <p className={clsx('text-lg font-bold', mulliganRate > 20 ? 'text-red-400' : mulliganRate > 10 ? 'text-yellow-400' : 'text-green-400')}>
             {mulliganRate}%
           </p>
-          <p className="text-[10px] text-gray-400">Rate</p>
+          <p className="text-[10px] text-gray-400">{t('handSim.rate')}</p>
         </div>
       </div>
 
       {/* Simulation result */}
       {simResult !== null && (
         <div className="bg-card-bg border border-card-border rounded-lg p-3">
-          <p className="text-xs text-gray-400 mb-1">1000 Simulation Result</p>
+          <p className="text-xs text-gray-400 mb-1">{t('handSim.simResult')}</p>
           <p className={clsx('text-xl font-bold', simResult > 20 ? 'text-red-400' : simResult > 10 ? 'text-yellow-400' : 'text-green-400')}>
-            {simResult}% Mulligan Rate
+            {t('handSim.mulliganRate', { rate: simResult })}
           </p>
           <p className="text-[10px] text-gray-500 mt-1">
-            {simResult < 10 ? 'Great consistency!' : simResult < 20 ? 'Acceptable, but consider more Basics.' : 'High mulligan risk. Add more Basic Pokemon.'}
+            {simResult < 10 ? t('handSim.greatConsistency') : simResult < 20 ? t('handSim.acceptable') : t('handSim.highRisk')}
           </p>
         </div>
       )}

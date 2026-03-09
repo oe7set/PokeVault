@@ -9,8 +9,10 @@ import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import type { DeckFormat } from '@/types/deck';
 import { formatDate } from '@/utils/cardHelpers';
+import { useTranslation } from '@/i18n/LanguageContext';
 
 export function Decks() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { createDeck, deleteDeck, duplicateDeck } = useDeckStore();
   const { addToast } = useUIStore();
@@ -26,7 +28,7 @@ export function Decks() {
     setCreating(true);
     try {
       const id = await createDeck(newDeckName.trim(), newDeckFormat);
-      addToast(`Deck "${newDeckName}" created`, 'success');
+      addToast(t('decks.deckCreated', { name: newDeckName }), 'success');
       setShowCreate(false);
       setNewDeckName('');
       navigate(`/decks/${id}`);
@@ -36,14 +38,14 @@ export function Decks() {
   };
 
   const handleDelete = async (id: number, name: string) => {
-    if (!confirm(`Delete "${name}"?`)) return;
+    if (!confirm(t('decks.confirmDelete', { name }))) return;
     await deleteDeck(id);
-    addToast('Deck deleted', 'info');
+    addToast(t('decks.deckDeleted'), 'info');
   };
 
   const handleDuplicate = async (id: number) => {
     const newId = await duplicateDeck(id);
-    addToast('Deck duplicated', 'success');
+    addToast(t('decks.deckDuplicated'), 'success');
     navigate(`/decks/${newId}`);
   };
 
@@ -65,12 +67,12 @@ export function Decks() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white font-display">My Decks</h1>
-          <p className="text-gray-400 text-sm">{(decks?.length ?? 0)} decks</p>
+          <h1 className="text-2xl font-bold text-white font-display">{t('decks.title')}</h1>
+          <p className="text-gray-400 text-sm">{t('decks.count', { count: decks?.length ?? 0 })}</p>
         </div>
         <Button onClick={() => setShowCreate(true)}>
           <Plus size={16} />
-          New Deck
+          {t('decks.newDeck')}
         </Button>
       </div>
 
@@ -78,11 +80,11 @@ export function Decks() {
       {decks?.length === 0 && (
         <div className="text-center py-16 text-gray-500">
           <p className="text-4xl mb-4">🃏</p>
-          <p className="text-lg">No decks yet</p>
-          <p className="text-sm mt-1">Create your first deck to start building</p>
+          <p className="text-lg">{t('decks.noDecks')}</p>
+          <p className="text-sm mt-1">{t('decks.noDecksHint')}</p>
           <Button className="mt-4" onClick={() => setShowCreate(true)}>
             <Plus size={16} />
-            Create Deck
+            {t('decks.createDeck')}
           </Button>
         </div>
       )}
@@ -107,7 +109,7 @@ export function Decks() {
                   )}
                   <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
                     <span className={totalCards === 60 ? 'text-green-400' : 'text-yellow-400'}>
-                      {totalCards}/60 cards
+                      {t('decks.cards', { count: totalCards })}
                     </span>
                     <span className="flex items-center gap-1">
                       <Calendar size={11} />
@@ -127,21 +129,21 @@ export function Decks() {
                   <button
                     onClick={() => navigate(`/decks/${deck.id}`)}
                     className="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-card-hover transition-colors"
-                    title="Edit deck"
+                    title={t('decks.editDeck')}
                   >
                     <Pencil size={15} />
                   </button>
                   <button
                     onClick={() => void handleDuplicate(deck.id!)}
                     className="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-card-hover transition-colors"
-                    title="Duplicate"
+                    title={t('decks.duplicate')}
                   >
                     <Copy size={15} />
                   </button>
                   <button
                     onClick={() => void handleDelete(deck.id!, deck.name)}
                     className="p-2 text-gray-400 hover:text-red-400 rounded-lg hover:bg-red-900/20 transition-colors"
-                    title="Delete"
+                    title={t('decks.delete')}
                   >
                     <Trash2 size={15} />
                   </button>
@@ -153,22 +155,22 @@ export function Decks() {
       </div>
 
       {/* Create Modal */}
-      <Modal isOpen={showCreate} onClose={() => setShowCreate(false)} title="Create New Deck" size="sm">
+      <Modal isOpen={showCreate} onClose={() => setShowCreate(false)} title={t('decks.createNewDeck')} size="sm">
         <div className="p-4 space-y-4">
           <div>
-            <label className="text-xs text-gray-500 mb-1 block">Deck Name</label>
+            <label className="text-xs text-gray-500 mb-1 block">{t('decks.deckName')}</label>
             <input
               type="text"
               value={newDeckName}
               onChange={(e) => setNewDeckName(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && void handleCreate()}
-              placeholder="e.g. Charizard ex Control"
+              placeholder={t('decks.deckNamePlaceholder')}
               autoFocus
               className="w-full bg-card-border/50 text-white rounded-lg px-3 py-2 border border-gray-600 focus:outline-none focus:border-accent text-sm"
             />
           </div>
           <div>
-            <label className="text-xs text-gray-500 mb-2 block">Format</label>
+            <label className="text-xs text-gray-500 mb-2 block">{t('decks.format')}</label>
             <div className="flex gap-2">
               {(['standard', 'expanded', 'unlimited'] as DeckFormat[]).map((f) => (
                 <button
@@ -184,7 +186,7 @@ export function Decks() {
             </div>
           </div>
           <Button onClick={() => void handleCreate()} loading={creating} className="w-full" disabled={!newDeckName.trim()}>
-            Create Deck
+            {t('decks.createDeck')}
           </Button>
         </div>
       </Modal>

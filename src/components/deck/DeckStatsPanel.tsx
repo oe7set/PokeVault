@@ -8,6 +8,7 @@ import type { Deck, DeckStats, MissingCardSummary } from '@/types/deck';
 import { getTypeColor } from '@/utils/typeColors';
 import { getDrawProbabilityByTurn } from '@/utils/deckAnalysis';
 import { MissingCardsPanel } from './MissingCardsPanel';
+import { useTranslation } from '@/i18n/LanguageContext';
 
 interface DeckStatsPanelProps {
   stats: DeckStats;
@@ -17,6 +18,7 @@ interface DeckStatsPanelProps {
 }
 
 export function DeckStatsPanel({ stats, deck, missingCards, totalMissingValue }: DeckStatsPanelProps) {
+  const { t } = useTranslation();
   const [selectedProbCard, setSelectedProbCard] = useState<string>('');
 
   const typeData = Object.entries(stats.typeDistribution).map(([type, count]) => ({
@@ -41,27 +43,27 @@ export function DeckStatsPanel({ stats, deck, missingCards, totalMissingValue }:
       <div className="grid grid-cols-3 gap-2 text-center">
         <div className="bg-green-900/20 border border-green-700/30 rounded-lg p-2">
           <p className="text-green-400 font-bold text-xl">{stats.pokemon}</p>
-          <p className="text-[10px] text-gray-400">Pokemon</p>
+          <p className="text-[10px] text-gray-400">{t('deckStats.pokemon')}</p>
         </div>
         <div className="bg-purple-900/20 border border-purple-700/30 rounded-lg p-2">
           <p className="text-purple-400 font-bold text-xl">{stats.supporters}</p>
-          <p className="text-[10px] text-gray-400">Supporters</p>
+          <p className="text-[10px] text-gray-400">{t('deckStats.supporters')}</p>
         </div>
         <div className="bg-blue-900/20 border border-blue-700/30 rounded-lg p-2">
           <p className="text-blue-400 font-bold text-xl">{stats.items}</p>
-          <p className="text-[10px] text-gray-400">Items</p>
+          <p className="text-[10px] text-gray-400">{t('deckStats.items')}</p>
         </div>
         <div className="bg-cyan-900/20 border border-cyan-700/30 rounded-lg p-2">
           <p className="text-cyan-400 font-bold text-xl">{stats.tools}</p>
-          <p className="text-[10px] text-gray-400">Tools</p>
+          <p className="text-[10px] text-gray-400">{t('deckStats.tools')}</p>
         </div>
         <div className="bg-indigo-900/20 border border-indigo-700/30 rounded-lg p-2">
           <p className="text-indigo-400 font-bold text-xl">{stats.stadiums}</p>
-          <p className="text-[10px] text-gray-400">Stadiums</p>
+          <p className="text-[10px] text-gray-400">{t('deckStats.stadiums')}</p>
         </div>
         <div className="bg-orange-900/20 border border-orange-700/30 rounded-lg p-2">
           <p className="text-orange-400 font-bold text-xl">{stats.energy}</p>
-          <p className="text-[10px] text-gray-400">Energy</p>
+          <p className="text-[10px] text-gray-400">{t('deckStats.energy')}</p>
         </div>
       </div>
 
@@ -69,9 +71,9 @@ export function DeckStatsPanel({ stats, deck, missingCards, totalMissingValue }:
       <div className={clsx('border rounded-lg p-3 flex items-center gap-3', consistencyBg)}>
         <p className={clsx('text-3xl font-bold', consistencyColor)}>{stats.consistencyScore}</p>
         <div>
-          <p className="text-xs text-gray-300 font-medium">Consistency Score</p>
+          <p className="text-xs text-gray-300 font-medium">{t('deckStats.consistencyScore')}</p>
           <p className="text-[10px] text-gray-500">
-            {stats.consistencyScore >= 70 ? 'Solid build' : stats.consistencyScore >= 40 ? 'Needs improvement' : 'Inconsistent'}
+            {stats.consistencyScore >= 70 ? t('deckStats.solidBuild') : stats.consistencyScore >= 40 ? t('deckStats.needsImprovement') : t('deckStats.inconsistent')}
           </p>
         </div>
       </div>
@@ -79,7 +81,7 @@ export function DeckStatsPanel({ stats, deck, missingCards, totalMissingValue }:
       {/* Opening Hand Probabilities */}
       {stats.openingHandProbabilities.length > 0 && (
         <div>
-          <p className="text-xs text-gray-500 mb-2">Opening Hand Probabilities</p>
+          <p className="text-xs text-gray-500 mb-2">{t('deckStats.openingHandProb')}</p>
           <div className="space-y-1.5">
             {stats.openingHandProbabilities.map((p) => {
               const pct = Math.round(p.probability * 1000) / 10;
@@ -103,13 +105,13 @@ export function DeckStatsPanel({ stats, deck, missingCards, totalMissingValue }:
       {/* Draw Probability Chart */}
       {deck && stats.openingHandProbabilities.length > 0 && (
         <div>
-          <p className="text-xs text-gray-500 mb-2">Draw Probability by Turn</p>
+          <p className="text-xs text-gray-500 mb-2">{t('deckStats.drawProbByTurn')}</p>
           <select
             value={selectedProbCard}
             onChange={(e) => setSelectedProbCard(e.target.value)}
             className="w-full bg-card-border text-gray-200 text-xs rounded-lg px-2 py-1.5 mb-2 border border-gray-600 focus:outline-none focus:border-accent"
           >
-            <option value="">Select a card...</option>
+            <option value="">{t('deckStats.selectCard')}</option>
             {deck.cards
               .filter((dc) => dc.count >= 1)
               .map((dc) => {
@@ -141,7 +143,7 @@ export function DeckStatsPanel({ stats, deck, missingCards, totalMissingValue }:
       {/* Evolution Lines */}
       {stats.evolutionLines.length > 0 && (
         <div>
-          <p className="text-xs text-gray-500 mb-2">Evolution Lines</p>
+          <p className="text-xs text-gray-500 mb-2">{t('deckStats.evolutionLines')}</p>
           <div className="space-y-1.5">
             {stats.evolutionLines.map((line, i) => (
               <div
@@ -162,7 +164,7 @@ export function DeckStatsPanel({ stats, deck, missingCards, totalMissingValue }:
                   </span>
                 ))}
                 {!line.complete && (
-                  <span className="text-red-400 ml-auto">Incomplete</span>
+                  <span className="text-red-400 ml-auto">{t('deckStats.incomplete')}</span>
                 )}
               </div>
             ))}
@@ -173,7 +175,7 @@ export function DeckStatsPanel({ stats, deck, missingCards, totalMissingValue }:
       {/* Energy Curve */}
       {stats.energyCurve.length > 0 && (
         <div>
-          <p className="text-xs text-gray-500 mb-2">Energy Curve</p>
+          <p className="text-xs text-gray-500 mb-2">{t('deckStats.energyCurve')}</p>
           <ResponsiveContainer width="100%" height={100}>
             <BarChart data={stats.energyCurve} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
               <XAxis dataKey="cost" tick={{ fontSize: 10, fill: '#9ca3af' }} />
@@ -192,7 +194,7 @@ export function DeckStatsPanel({ stats, deck, missingCards, totalMissingValue }:
       {/* Type Distribution */}
       {typeData.length > 0 && (
         <div>
-          <p className="text-xs text-gray-500 mb-2">Type Distribution</p>
+          <p className="text-xs text-gray-500 mb-2">{t('deckStats.typeDistribution')}</p>
           <div className="flex items-center gap-3">
             <PieChart width={80} height={80}>
               <Pie data={typeData} cx={35} cy={35} innerRadius={15} outerRadius={35} dataKey="value" strokeWidth={0}>
@@ -218,17 +220,17 @@ export function DeckStatsPanel({ stats, deck, missingCards, totalMissingValue }:
       <div className="space-y-1">
         {stats.avgAttackCost > 0 && (
           <div className="text-xs text-gray-500">
-            Avg. Attack Cost: <span className="text-white">{stats.avgAttackCost} energy</span>
+            {t('deckStats.avgAttackCost')} <span className="text-white">{stats.avgAttackCost} energy</span>
           </div>
         )}
         {stats.energyToAttackerRatio > 0 && (
           <div className="text-xs text-gray-500">
-            Energy/Attacker Ratio: <span className={clsx(
+            {t('deckStats.energyAttackerRatio')} <span className={clsx(
               'font-medium',
               stats.energyToAttackerRatio >= 1.0 && stats.energyToAttackerRatio <= 2.0 ? 'text-green-400' : 'text-yellow-400',
             )}>{stats.energyToAttackerRatio}</span>
-            {stats.energyToAttackerRatio < 1.0 && <span className="text-yellow-400 ml-1">(low - may struggle to power up)</span>}
-            {stats.energyToAttackerRatio > 2.5 && <span className="text-yellow-400 ml-1">(high - consider fewer energy)</span>}
+            {stats.energyToAttackerRatio < 1.0 && <span className="text-yellow-400 ml-1">{t('deckStats.lowEnergy')}</span>}
+            {stats.energyToAttackerRatio > 2.5 && <span className="text-yellow-400 ml-1">{t('deckStats.highEnergy')}</span>}
           </div>
         )}
       </div>
@@ -236,7 +238,7 @@ export function DeckStatsPanel({ stats, deck, missingCards, totalMissingValue }:
       {/* Weaknesses */}
       {stats.weaknesses.length > 0 && (
         <div>
-          <p className="text-xs text-gray-500 mb-1">Deck Weaknesses</p>
+          <p className="text-xs text-gray-500 mb-1">{t('deckStats.deckWeaknesses')}</p>
           <div className="flex flex-wrap gap-1">
             {stats.weaknesses.map((w) => (
               <span key={w} className="text-xs px-2 py-0.5 rounded bg-red-900/40 text-red-300">{w}</span>
@@ -248,7 +250,7 @@ export function DeckStatsPanel({ stats, deck, missingCards, totalMissingValue }:
       {/* Deck Value */}
       {stats.estimatedValue > 0 && (
         <div className="bg-card-bg border border-card-border rounded-lg p-3">
-          <p className="text-xs text-gray-500">Estimated Deck Value</p>
+          <p className="text-xs text-gray-500">{t('deckStats.estimatedValue')}</p>
           <p className="text-lg font-bold text-white">${stats.estimatedValue.toFixed(2)}</p>
         </div>
       )}

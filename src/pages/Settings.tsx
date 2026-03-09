@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Key, Trash2, Download, Info, ChevronRight, CheckCircle, Database } from 'lucide-react';
+import { Key, Trash2, Download, Info, ChevronRight, CheckCircle, Database, Globe } from 'lucide-react';
 import { db, getSetting, setSetting } from '@/db/database';
-import { clearProviderCache } from '@/api/cardApi';
+import { clearProviderCache, clearCardCache } from '@/api/cardApi';
 import { Button } from '@/components/ui/Button';
 import { useUIStore } from '@/stores/uiStore';
 import { clsx } from 'clsx';
+import { useTranslation } from '@/i18n/LanguageContext';
+import { LOCALES, type Locale } from '@/i18n/translations';
 
 type ApiProvider = 'tcgdex' | 'pokemontcg';
 
@@ -15,9 +17,11 @@ const PROVIDERS: { id: ApiProvider; name: string; description: string }[] = [
 
 export function Settings() {
   const { addToast } = useUIStore();
+  const { t, locale, setLocale } = useTranslation();
   const [anthropicKey, setAnthropicKey] = useState('');
   const [tcgApiKey, setTcgApiKey] = useState('');
   const [apiProvider, setApiProvider] = useState<ApiProvider>('tcgdex');
+  const [cardLanguage, setCardLanguage] = useState<Locale>('en');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -25,10 +29,12 @@ export function Settings() {
       getSetting('anthropic_api_key'),
       getSetting('tcg_api_key'),
       getSetting('api_provider'),
-    ]).then(([ak, tk, ap]) => {
+      getSetting('card_language'),
+    ]).then(([ak, tk, ap, cl]) => {
       if (ak) setAnthropicKey(ak);
       if (tk) setTcgApiKey(tk);
       if (ap === 'pokemontcg' || ap === 'tcgdex') setApiProvider(ap);
+      if (cl) setCardLanguage(cl as Locale);
     });
   }, []);
 
@@ -39,7 +45,7 @@ export function Settings() {
       await setSetting('tcg_api_key', tcgApiKey.trim());
       await setSetting('api_provider', apiProvider);
       clearProviderCache();
-      addToast('Settings saved', 'success');
+      addToast(t('settings.settingsSaved'), 'success');
     } finally {
       setSaving(false);
     }
@@ -49,17 +55,24 @@ export function Settings() {
     setApiProvider(id);
     await setSetting('api_provider', id);
     clearProviderCache();
-    addToast(`Switched to ${PROVIDERS.find((p) => p.id === id)?.name}`, 'info');
+    addToast(t('settings.switchedTo', { name: PROVIDERS.find((p) => p.id === id)?.name ?? id }), 'info');
+  };
+
+  const handleCardLanguageChange = async (lang: Locale) => {
+    setCardLanguage(lang);
+    await setSetting('card_language', lang);
+    await clearCardCache();
+    addToast(t('settings.cardLanguageChanged'), 'info');
   };
 
   const handleClearData = async () => {
-    if (!confirm('Clear ALL data? This cannot be undone. Your collection and decks will be deleted.')) return;
+    if (!confirm(t('settings.clearConfirm'))) return;
     await db.collection.clear();
     await db.decks.clear();
     await db.cards_cache.clear();
     await db.sets_cache.clear();
     await db.recent_searches.clear();
-    addToast('All data cleared', 'info');
+    addToast(t('settings.dataCleared'), 'info');
   };
 
   const handleExportData = async () => {
@@ -75,7 +88,7 @@ export function Settings() {
     a.download = `pokevault-backup-${new Date().toISOString().split('T')[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    addToast('Data exported', 'success');
+    addToast(t('settings.dataExported'), 'success');
   };
 
   const activeProviderName = PROVIDERS.find((p) => p.id === apiProvider)?.name ?? 'TCGdex';
@@ -83,20 +96,78 @@ export function Settings() {
   return (
     <div className="p-4 space-y-6 max-w-lg">
       <div>
-        <h1 className="text-2xl font-bold text-white font-display">Settings</h1>
-        <p className="text-gray-400 text-sm">Configure PokeVault</p>
+        <h1 className="text-2xl font-bold text-white font-display">{t('settings.title')}</h1>
+        <p className="text-gray-400 text-sm">{t('settings.subtitle')}</p>
+      </div>
+
+      {/* Language */}
+      <div className="bg-card-bg border border-card-border rounded-xl overflow-hidden">
+        <div className="px-4 py-3 border-b border-card-border flex items-center gap-2">
+          <Globe size={16} className="text-green-400" />
+          <h2 className="text-sm font-semibold text-gray-200">{t('settings.language')}</h2>
+        </div>
+
+        <div className="p-4 space-y-4">
+          <div>
+            <p className="text-xs text-gray-500 mb-2">{t('settings.uiLanguage')}</p>
+            <div className="flex flex-wrap gap-2">
+              {LOCALES.map((loc) => (
+                <button
+                  key={loc.code}
+                  onClick={() => setLocale(loc.code)}
+                  className={clsx(
+                    'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border',
+                    locale === loc.code
+                      ? 'border-accent bg-accent/10 text-white'
+                      : 'border-card-border bg-card-border/30 text-gray-400 hover:text-white',
+                  )}
+                >
+                  <span>{loc.flag}</span>
+                  <span>{loc.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {apiProvider === 'tcgdex' && (
+            <div>
+              <p className="text-xs text-gray-500 mb-2">{t('settings.cardLanguage')}</p>
+              <div className="flex flex-wrap gap-2">
+                {LOCALES.map((loc) => (
+                  <button
+                    key={loc.code}
+                    onClick={() => void handleCardLanguageChange(loc.code)}
+                    className={clsx(
+                      'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border',
+                      cardLanguage === loc.code
+                        ? 'border-accent bg-accent/10 text-white'
+                        : 'border-card-border bg-card-border/30 text-gray-400 hover:text-white',
+                    )}
+                  >
+                    <span>{loc.flag}</span>
+                    <span>{loc.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {apiProvider !== 'tcgdex' && (
+            <p className="text-xs text-gray-500 italic">{t('settings.cardLanguageNote')}</p>
+          )}
+        </div>
       </div>
 
       {/* Card Data Provider */}
       <div className="bg-card-bg border border-card-border rounded-xl overflow-hidden">
         <div className="px-4 py-3 border-b border-card-border flex items-center gap-2">
           <Database size={16} className="text-blue-400" />
-          <h2 className="text-sm font-semibold text-gray-200">Card Data Provider</h2>
+          <h2 className="text-sm font-semibold text-gray-200">{t('settings.cardDataProvider')}</h2>
         </div>
 
         <div className="p-4 space-y-3">
           <p className="text-xs text-gray-500">
-            Choose where card data is fetched from. Switch providers if one is down.
+            {t('settings.providerHint')}
           </p>
           {PROVIDERS.map((p) => (
             <button
@@ -128,13 +199,13 @@ export function Settings() {
       <div className="bg-card-bg border border-card-border rounded-xl overflow-hidden">
         <div className="px-4 py-3 border-b border-card-border flex items-center gap-2">
           <Key size={16} className="text-accent" />
-          <h2 className="text-sm font-semibold text-gray-200">API Keys</h2>
+          <h2 className="text-sm font-semibold text-gray-200">{t('settings.apiKeys')}</h2>
         </div>
 
         <div className="p-4 space-y-4">
           <div>
             <label className="text-xs text-gray-500 mb-1.5 block">
-              Anthropic API Key (for AI Deck Advisor)
+              {t('settings.anthropicKey')}
             </label>
             <div className="flex gap-2">
               <input
@@ -151,14 +222,14 @@ export function Settings() {
               )}
             </div>
             <p className="text-xs text-gray-600 mt-1">
-              Get a free key at console.anthropic.com • Required for AI deck tips
+              {t('settings.anthropicKeyHint')}
             </p>
           </div>
 
           {apiProvider === 'pokemontcg' && (
             <div>
               <label className="text-xs text-gray-500 mb-1.5 block">
-                pokemontcg.io API Key (optional — increases rate limits)
+                {t('settings.tcgKey')}
               </label>
               <div className="flex gap-2">
                 <input
@@ -175,13 +246,13 @@ export function Settings() {
                 )}
               </div>
               <p className="text-xs text-gray-600 mt-1">
-                Free at pokemontcg.io • Works without key, but with lower rate limits
+                {t('settings.tcgKeyHint')}
               </p>
             </div>
           )}
 
           <Button onClick={() => void handleSaveKeys()} loading={saving}>
-            Save API Keys
+            {t('settings.saveApiKeys')}
           </Button>
         </div>
       </div>
@@ -190,13 +261,13 @@ export function Settings() {
       <div className="bg-card-bg border border-card-border rounded-xl overflow-hidden">
         <div className="px-4 py-3 border-b border-card-border flex items-center gap-2">
           <Download size={16} className="text-blue-400" />
-          <h2 className="text-sm font-semibold text-gray-200">Data Management</h2>
+          <h2 className="text-sm font-semibold text-gray-200">{t('settings.dataManagement')}</h2>
         </div>
 
         <div className="p-4 space-y-3">
           <div>
             <p className="text-xs text-gray-500 mb-1">
-              All data is stored locally in your browser (IndexedDB). Nothing is sent to servers except API calls.
+              {t('settings.dataHint')}
             </p>
           </div>
 
@@ -206,7 +277,7 @@ export function Settings() {
           >
             <div className="flex items-center gap-2 text-gray-300">
               <Download size={16} />
-              Export Backup (JSON)
+              {t('settings.exportBackup')}
             </div>
             <ChevronRight size={16} className="text-gray-500" />
           </button>
@@ -217,7 +288,7 @@ export function Settings() {
           >
             <div className="flex items-center gap-2 text-red-400">
               <Trash2 size={16} />
-              Clear All Data
+              {t('settings.clearAllData')}
             </div>
             <ChevronRight size={16} className="text-red-500" />
           </button>
@@ -228,7 +299,7 @@ export function Settings() {
       <div className="bg-card-bg border border-card-border rounded-xl overflow-hidden">
         <div className="px-4 py-3 border-b border-card-border flex items-center gap-2">
           <Info size={16} className="text-gray-400" />
-          <h2 className="text-sm font-semibold text-gray-200">About</h2>
+          <h2 className="text-sm font-semibold text-gray-200">{t('settings.about')}</h2>
         </div>
         <div className="p-4 text-xs text-gray-500 space-y-1">
           <p><span className="text-gray-400">App:</span> PokeVault v1.0</p>

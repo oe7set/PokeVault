@@ -11,8 +11,10 @@ import type { PokemonCard } from '@/types/pokemon';
 import { formatAttackCost } from '@/utils/cardHelpers';
 import { db } from '@/db/database';
 import { useLiveQuery } from 'dexie-react-hooks';
+import { useTranslation } from '@/i18n/LanguageContext';
 
 export function CardDetailModal() {
+  const { t } = useTranslation();
   const { cardDetailId, setCardDetailId, addToast } = useUIStore();
   const { addCard, removeCard, toggleWishlist } = useCollectionStore();
   const [card, setCard] = useState<PokemonCard | null>(null);
@@ -32,9 +34,9 @@ export function CardDetailModal() {
     setLoading(true);
     void getCard(cardDetailId)
       .then((c) => setCard(c))
-      .catch(() => addToast('Failed to load card details', 'error'))
+      .catch(() => addToast(t('cardDetail.failedToLoad'), 'error'))
       .finally(() => setLoading(false));
-  }, [cardDetailId, addToast]);
+  }, [cardDetailId, addToast, t]);
 
   const ownedCount = (collectionEntry?.quantity ?? 0) + (collectionEntry?.quantityFoil ?? 0);
 
@@ -64,7 +66,7 @@ export function CardDetailModal() {
             {/* Collection controls */}
             <div className="w-full space-y-2">
               <div className="flex items-center justify-between bg-card-border/50 rounded-lg px-3 py-2">
-                <span className="text-sm text-gray-300">In Collection</span>
+                <span className="text-sm text-gray-300">{t('cardDetail.inCollection')}</span>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => void removeCard(card.id)}
@@ -76,7 +78,7 @@ export function CardDetailModal() {
                   <button
                     onClick={async () => {
                       await addCard(card.id);
-                      addToast(`Added ${card.name}`, 'success');
+                      addToast(t('cardDetail.added', { name: card.name }), 'success');
                     }}
                     className="text-gray-400 hover:text-white transition-colors"
                   >
@@ -92,11 +94,11 @@ export function CardDetailModal() {
                   className="flex-1"
                   onClick={async () => {
                     await toggleWishlist(card.id);
-                    addToast(collectionEntry?.inWishlist ? 'Removed from wishlist' : 'Added to wishlist', 'info');
+                    addToast(collectionEntry?.inWishlist ? t('cardDetail.removedFromWishlist') : t('cardDetail.addedToWishlist'), 'info');
                   }}
                 >
                   <Heart size={14} className={collectionEntry?.inWishlist ? 'fill-pink-400 text-pink-400' : ''} />
-                  Wishlist
+                  {t('cardDetail.wishlist')}
                 </Button>
                 <Button
                   variant="secondary"
@@ -104,11 +106,11 @@ export function CardDetailModal() {
                   className="flex-1"
                   onClick={async () => {
                     await addCard(card.id);
-                    addToast(`Added ${card.name}`, 'success');
+                    addToast(t('cardDetail.added', { name: card.name }), 'success');
                   }}
                 >
                   <Plus size={14} />
-                  Add
+                  {t('cardDetail.add')}
                 </Button>
               </div>
             </div>
@@ -134,14 +136,14 @@ export function CardDetailModal() {
             {/* Set info */}
             <div className="bg-card-border/30 rounded-lg p-3 text-sm">
               <p className="text-gray-300">
-                <span className="text-gray-500">Set: </span>
+                <span className="text-gray-500">{t('cardDetail.set')} </span>
                 <span>{card.set.name}</span>
                 <span className="text-gray-500 ml-2">#{card.number}/{card.set.printedTotal}</span>
               </p>
               <p className="text-gray-300 mt-1">
-                <span className="text-gray-500">Series: </span>{card.set.series}
+                <span className="text-gray-500">{t('cardDetail.series')} </span>{card.set.series}
                 {card.artist && (
-                  <span className="text-gray-500 ml-3">Artist: <span className="text-gray-300">{card.artist}</span></span>
+                  <span className="text-gray-500 ml-3">{t('cardDetail.artist')} <span className="text-gray-300">{card.artist}</span></span>
                 )}
               </p>
               <div className="flex gap-3 mt-2">
@@ -160,7 +162,7 @@ export function CardDetailModal() {
             {card.abilities && card.abilities.length > 0 && (
               <div>
                 <h3 className="text-sm font-semibold text-gray-400 mb-2 flex items-center gap-1">
-                  <Zap size={14} /> Abilities
+                  <Zap size={14} /> {t('cardDetail.abilities')}
                 </h3>
                 {card.abilities.map((ability) => (
                   <div key={ability.name} className="bg-purple-900/20 border border-purple-700/30 rounded-lg p-3 mb-2">
@@ -175,7 +177,7 @@ export function CardDetailModal() {
             {card.attacks && card.attacks.length > 0 && (
               <div>
                 <h3 className="text-sm font-semibold text-gray-400 mb-2 flex items-center gap-1">
-                  <Star size={14} /> Attacks
+                  <Star size={14} /> {t('cardDetail.attacks')}
                 </h3>
                 {card.attacks.map((attack) => (
                   <div key={attack.name} className="bg-red-900/10 border border-red-700/20 rounded-lg p-3 mb-2">
@@ -200,7 +202,7 @@ export function CardDetailModal() {
             <div className="flex flex-wrap gap-4 text-sm">
               {card.weaknesses && card.weaknesses.length > 0 && (
                 <div>
-                  <p className="text-gray-500 mb-1 flex items-center gap-1"><Shield size={12} /> Weakness</p>
+                  <p className="text-gray-500 mb-1 flex items-center gap-1"><Shield size={12} /> {t('cardDetail.weakness')}</p>
                   {card.weaknesses.map((w) => (
                     <Badge key={w.type} variant="type" type={w.type}>{w.type} {w.value}</Badge>
                   ))}
@@ -208,7 +210,7 @@ export function CardDetailModal() {
               )}
               {card.resistances && card.resistances.length > 0 && (
                 <div>
-                  <p className="text-gray-500 mb-1">Resistance</p>
+                  <p className="text-gray-500 mb-1">{t('cardDetail.resistance')}</p>
                   {card.resistances.map((r) => (
                     <Badge key={r.type} variant="type" type={r.type}>{r.type} {r.value}</Badge>
                   ))}
@@ -216,7 +218,7 @@ export function CardDetailModal() {
               )}
               {card.retreatCost && card.retreatCost.length > 0 && (
                 <div>
-                  <p className="text-gray-500 mb-1">Retreat</p>
+                  <p className="text-gray-500 mb-1">{t('cardDetail.retreat')}</p>
                   <span className="text-white">{card.retreatCost.map(() => '⭐').join('')}</span>
                 </div>
               )}

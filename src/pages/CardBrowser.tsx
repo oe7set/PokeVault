@@ -4,8 +4,10 @@ import { useCardSearch } from '@/hooks/useCardSearch';
 import { CardGrid } from '@/components/cards/CardGrid';
 import { CardFilters } from '@/components/cards/CardFilters';
 import type { SearchFilters } from '@/types/pokemon';
+import { useTranslation } from '@/i18n/LanguageContext';
 
 export function CardBrowser() {
+  const { t } = useTranslation();
   const { results, loading, error, filters, updateFilters, loadMore, hasMore, search } = useCardSearch();
 
   // Initial search on mount
@@ -32,9 +34,9 @@ export function CardBrowser() {
     <div className="p-4 space-y-4">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-white font-display">Card Browser</h1>
+        <h1 className="text-2xl font-bold text-white font-display">{t('cardBrowser.title')}</h1>
         <p className="text-gray-400 text-sm">
-          {results ? `${results.totalCount.toLocaleString()} cards found` : 'Search the complete Pokémon TCG database'}
+          {results ? t('cardBrowser.cardsFound', { count: results.totalCount.toLocaleString() }) : t('cardBrowser.subtitle')}
         </p>
       </div>
 
@@ -45,7 +47,7 @@ export function CardBrowser() {
           type="text"
           value={filters.query}
           onChange={(e) => updateFilters({ query: e.target.value })}
-          placeholder="Search cards by name..."
+          placeholder={t('cardBrowser.searchPlaceholder')}
           className="w-full bg-card-bg border border-card-border text-white rounded-xl pl-10 pr-10 py-3 focus:outline-none focus:border-accent text-sm"
         />
         {filters.query && (

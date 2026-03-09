@@ -1,5 +1,5 @@
 import type { PokemonCard, PokemonSet, SearchFilters } from '@/types/pokemon';
-import { getSetting } from '@/db/database';
+import { getSetting, db } from '@/db/database';
 
 export interface SearchResult {
   data: PokemonCard[];
@@ -41,6 +41,12 @@ async function getProvider(): Promise<CardApiProvider> {
 
 export function clearProviderCache(): void {
   cachedProvider = null;
+}
+
+export async function clearCardCache(): Promise<void> {
+  await db.cards_cache.clear();
+  await db.sets_cache.clear();
+  clearProviderCache();
 }
 
 export async function searchCards(

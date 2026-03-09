@@ -1,8 +1,12 @@
 import type { PokemonCard, PokemonSet, SearchFilters } from '@/types/pokemon';
-import { getCachedCard, setCachedCard } from '@/db/database';
+import { getCachedCard, setCachedCard, getSetting } from '@/db/database';
 import type { CardApiProvider, SearchResult } from './cardApi';
 
 const BASE_URL = '/tcgdex-api';
+
+async function getCardLanguage(): Promise<string> {
+  return (await getSetting('card_language')) ?? 'en';
+}
 
 interface TcgdexCardBrief {
   id: string;
@@ -71,7 +75,8 @@ interface TcgdexSetFull extends TcgdexSetBrief {
 }
 
 async function apiFetch<T>(path: string): Promise<T> {
-  const response = await fetch(`${BASE_URL}${path}`);
+  const lang = await getCardLanguage();
+  const response = await fetch(`${BASE_URL}/${lang}${path}`);
   if (!response.ok) {
     throw new Error(`TCGdex API error: ${response.status} ${response.statusText}`);
   }

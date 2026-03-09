@@ -7,6 +7,7 @@ import type { Deck, AIAdvice, AISuggestion } from '@/types/deck';
 import type { PokemonCard } from '@/types/pokemon';
 import { clsx } from 'clsx';
 import { useUIStore } from '@/stores/uiStore';
+import { useTranslation } from '@/i18n/LanguageContext';
 
 interface AIAdvisorPanelProps {
   deck: Deck;
@@ -29,6 +30,7 @@ const PRIORITY_ICONS: Record<AISuggestion['priority'], string> = {
 };
 
 export function AIAdvisorPanel({ deck, cardsMap }: AIAdvisorPanelProps) {
+  const { t } = useTranslation();
   const [advice, setAdvice] = useState<AIAdvice | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -76,7 +78,7 @@ export function AIAdvisorPanel({ deck, cardsMap }: AIAdvisorPanelProps) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Sparkles size={16} className="text-yellow-400" />
-          <span className="text-sm font-medium text-gray-200">AI Deck Advisor</span>
+          <span className="text-sm font-medium text-gray-200">{t('ai.title')}</span>
         </div>
         <Button
           size="sm"
@@ -87,7 +89,7 @@ export function AIAdvisorPanel({ deck, cardsMap }: AIAdvisorPanelProps) {
           title={!canFetch ? `Wait ${cooldownSeconds}s` : totalCards < 10 ? 'Add more cards first' : 'Get AI advice'}
         >
           <RefreshCw size={13} />
-          {advice ? 'Refresh' : 'Analyze'}
+          {advice ? t('ai.refresh') : t('ai.analyze')}
           {!canFetch && ` (${cooldownSeconds}s)`}
         </Button>
       </div>
@@ -96,10 +98,10 @@ export function AIAdvisorPanel({ deck, cardsMap }: AIAdvisorPanelProps) {
         <div className="flex items-start gap-2 text-xs text-red-300 bg-red-900/20 rounded-lg p-3 border border-red-700/30">
           <AlertCircle size={14} className="shrink-0 mt-0.5" />
           <div>
-            <p className="font-medium mb-1">AI analysis failed</p>
+            <p className="font-medium mb-1">{t('ai.analysisFailed')}</p>
             <p>{error}</p>
             {error.includes('API key') && (
-              <p className="mt-1 text-red-200">Add your Anthropic API key in Settings.</p>
+              <p className="mt-1 text-red-200">{t('ai.addApiKey')}</p>
             )}
           </div>
         </div>
@@ -108,10 +110,10 @@ export function AIAdvisorPanel({ deck, cardsMap }: AIAdvisorPanelProps) {
       {!advice && !loading && !error && (
         <div className="text-center py-6 text-gray-500">
           <Sparkles size={32} className="mx-auto mb-3 opacity-30" />
-          <p className="text-sm">Get personalized deck improvement suggestions</p>
-          <p className="text-xs mt-1">Powered by Claude AI</p>
+          <p className="text-sm">{t('ai.emptyState')}</p>
+          <p className="text-xs mt-1">{t('ai.poweredBy')}</p>
           {totalCards < 10 && (
-            <p className="text-xs mt-2 text-yellow-500">Add at least 10 cards to analyze</p>
+            <p className="text-xs mt-2 text-yellow-500">{t('ai.addMoreCards')}</p>
           )}
         </div>
       )}
@@ -119,7 +121,7 @@ export function AIAdvisorPanel({ deck, cardsMap }: AIAdvisorPanelProps) {
       {loading && (
         <div className="flex flex-col items-center gap-3 py-6">
           <Spinner size="md" />
-          <p className="text-sm text-gray-400">Analyzing your deck...</p>
+          <p className="text-sm text-gray-400">{t('ai.analyzing')}</p>
         </div>
       )}
 
@@ -127,7 +129,7 @@ export function AIAdvisorPanel({ deck, cardsMap }: AIAdvisorPanelProps) {
         <div className="space-y-3">
           {/* Summary */}
           <div className="bg-yellow-900/10 border border-yellow-700/20 rounded-lg p-3">
-            <p className="text-yellow-300 text-sm font-medium mb-1">Overview</p>
+            <p className="text-yellow-300 text-sm font-medium mb-1">{t('ai.overview')}</p>
             <p className="text-gray-300 text-xs leading-relaxed">{advice.summary}</p>
           </div>
 
@@ -144,7 +146,7 @@ export function AIAdvisorPanel({ deck, cardsMap }: AIAdvisorPanelProps) {
             <div className="grid grid-cols-2 gap-2">
               {advice.strengths && advice.strengths.length > 0 && (
                 <div className="bg-green-900/10 border border-green-700/20 rounded-lg p-2">
-                  <p className="text-green-400 text-xs font-medium mb-1">Strengths</p>
+                  <p className="text-green-400 text-xs font-medium mb-1">{t('ai.strengths')}</p>
                   {advice.strengths.map((s, i) => (
                     <p key={i} className="text-gray-400 text-xs">• {s}</p>
                   ))}
@@ -152,7 +154,7 @@ export function AIAdvisorPanel({ deck, cardsMap }: AIAdvisorPanelProps) {
               )}
               {advice.weaknesses && advice.weaknesses.length > 0 && (
                 <div className="bg-red-900/10 border border-red-700/20 rounded-lg p-2">
-                  <p className="text-red-400 text-xs font-medium mb-1">Weaknesses</p>
+                  <p className="text-red-400 text-xs font-medium mb-1">{t('ai.weaknesses')}</p>
                   {advice.weaknesses.map((w, i) => (
                     <p key={i} className="text-gray-400 text-xs">• {w}</p>
                   ))}
@@ -163,7 +165,7 @@ export function AIAdvisorPanel({ deck, cardsMap }: AIAdvisorPanelProps) {
 
           {/* Suggestions */}
           <div>
-            <p className="text-xs text-gray-500 mb-2">Card Suggestions</p>
+            <p className="text-xs text-gray-500 mb-2">{t('ai.cardSuggestions')}</p>
             <div className="space-y-2">
               {advice.suggestions.map((s, i) => (
                 <div

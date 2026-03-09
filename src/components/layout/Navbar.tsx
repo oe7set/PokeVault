@@ -1,16 +1,19 @@
 import { NavLink } from 'react-router-dom';
 import { Home, Search, BookOpen, Layers, Camera, Settings, Zap } from 'lucide-react';
 import { clsx } from 'clsx';
-
-const navItems = [
-  { to: '/', icon: Home, label: 'Dashboard', exact: true },
-  { to: '/cards', icon: Search, label: 'Card Browser' },
-  { to: '/collection', icon: BookOpen, label: 'My Collection' },
-  { to: '/decks', icon: Layers, label: 'My Decks' },
-  { to: '/scanner', icon: Camera, label: 'Card Scanner' },
-];
+import { useTranslation } from '@/i18n/LanguageContext';
 
 export function Navbar() {
+  const { t } = useTranslation();
+
+  const navItems = [
+    { to: '/', icon: Home, label: t('nav.dashboard'), exact: true },
+    { to: '/cards', icon: Search, label: t('nav.cardBrowser') },
+    { to: '/collection', icon: BookOpen, label: t('nav.myCollection') },
+    { to: '/decks', icon: Layers, label: t('nav.myDecks') },
+    { to: '/scanner', icon: Camera, label: t('nav.cardScanner') },
+  ];
+
   return (
     <aside className="hidden md:flex flex-col w-56 bg-surface-50 border-r border-card-border h-screen sticky top-0 shrink-0">
       {/* Logo */}
@@ -62,7 +65,7 @@ export function Navbar() {
           }
         >
           <Settings size={18} />
-          Settings
+          {t('nav.settings')}
         </NavLink>
         <p className="text-gray-600 text-xs text-center mt-3">PokeVault v1.0</p>
       </div>

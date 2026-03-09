@@ -22,10 +22,12 @@ import { DeckCardRow } from '@/components/deck/DeckCardRow';
 import { HandSimulator } from '@/components/deck/HandSimulator';
 import { Spinner } from '@/components/ui/Spinner';
 import { clsx } from 'clsx';
+import { useTranslation } from '@/i18n/LanguageContext';
 
 type SidePanel = 'cards' | 'collection' | 'stats' | 'hand' | 'ai' | 'export';
 
 export function DeckBuilder() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { addCardToDeck, removeCardFromDeck, setCardCount, updateDeck } = useDeckStore();
@@ -116,7 +118,7 @@ export function DeckBuilder() {
 
     const isBasicEnergy = card.supertype === 'Energy' && card.subtypes?.includes('Basic');
     if (!isBasicEnergy && currentCount >= 4) {
-      addToast(`Max 4 copies of ${card.name} allowed`, 'error');
+      addToast(t('deckBuilder.maxCopies', { name: card.name }), 'error');
       return;
     }
 
@@ -156,12 +158,12 @@ export function DeckBuilder() {
   const totalCards = deck.cards.reduce((s, dc) => s + dc.count, 0);
 
   const tabs = [
-    { key: 'cards' as const, icon: Search, label: 'Cards' },
-    { key: 'collection' as const, icon: Library, label: 'Collection' },
-    { key: 'stats' as const, icon: BarChart2, label: 'Stats' },
-    { key: 'hand' as const, icon: Hand, label: 'Hand' },
-    { key: 'ai' as const, icon: Sparkles, label: 'AI Tips' },
-    { key: 'export' as const, icon: Download, label: 'Export' },
+    { key: 'cards' as const, icon: Search, label: t('deckBuilder.cards') },
+    { key: 'collection' as const, icon: Library, label: t('deckBuilder.collection') },
+    { key: 'stats' as const, icon: BarChart2, label: t('deckBuilder.stats') },
+    { key: 'hand' as const, icon: Hand, label: t('deckBuilder.hand') },
+    { key: 'ai' as const, icon: Sparkles, label: t('deckBuilder.aiTips') },
+    { key: 'export' as const, icon: Download, label: t('deckBuilder.export') },
   ];
 
   return (
@@ -175,7 +177,7 @@ export function DeckBuilder() {
             className="flex items-center gap-2 text-gray-400 hover:text-white text-sm mb-3 transition-colors"
           >
             <ArrowLeft size={16} />
-            Back to Decks
+            {t('deckBuilder.backToDecks')}
           </button>
           <input
             value={deck.name}
@@ -213,7 +215,7 @@ export function DeckBuilder() {
           >
             <AlertTriangle size={14} className="text-yellow-400 shrink-0" />
             <span className="text-[10px] text-yellow-300">
-              Missing {totalMissing} cards {totalMissingValue > 0 && `(~$${totalMissingValue.toFixed(2)})`}
+              {t('deckBuilder.missing', { count: totalMissing })} {totalMissingValue > 0 && `(~$${totalMissingValue.toFixed(2)})`}
             </span>
           </button>
         )}
@@ -252,7 +254,7 @@ export function DeckBuilder() {
 
           {deck.cards.length === 0 && (
             <div className="text-center py-8 text-gray-500">
-              <p className="text-sm">Search cards and add them to your deck</p>
+              <p className="text-sm">{t('deckBuilder.emptyDeck')}</p>
             </div>
           )}
         </div>
@@ -292,7 +294,7 @@ export function DeckBuilder() {
                     setSearchQuery(e.target.value);
                     updateFilters({ query: e.target.value });
                   }}
-                  placeholder="Search cards to add..."
+                  placeholder={t('deckBuilder.searchCards')}
                   className="w-full bg-card-bg border border-card-border text-white rounded-xl pl-9 pr-4 py-2.5 focus:outline-none focus:border-accent text-sm"
                 />
               </div>
@@ -322,7 +324,7 @@ export function DeckBuilder() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Filter your collection..."
+                  placeholder={t('deckBuilder.filterCollection')}
                   className="w-full bg-card-bg border border-card-border text-white rounded-xl pl-9 pr-4 py-2.5 focus:outline-none focus:border-accent text-sm"
                 />
               </div>
@@ -330,8 +332,8 @@ export function DeckBuilder() {
                 <div className="text-center py-8 text-gray-500">
                   <p className="text-sm">
                     {collectionCards.length === 0
-                      ? 'Your collection is empty. Add cards from the Collection page first.'
-                      : 'No cards match your search.'}
+                      ? t('deckBuilder.collectionEmpty')
+                      : t('deckBuilder.noCardsMatch')}
                   </p>
                 </div>
               ) : (
@@ -348,7 +350,7 @@ export function DeckBuilder() {
 
           {sidePanel === 'stats' && stats && (
             <div className="max-w-md">
-              <h3 className="text-sm font-semibold text-gray-300 mb-4">Deck Analysis</h3>
+              <h3 className="text-sm font-semibold text-gray-300 mb-4">{t('deckBuilder.deckAnalysis')}</h3>
               <DeckStatsPanel
                 stats={stats}
                 deck={deck}
@@ -360,7 +362,7 @@ export function DeckBuilder() {
 
           {sidePanel === 'hand' && (
             <div className="max-w-lg">
-              <h3 className="text-sm font-semibold text-gray-300 mb-4">Opening Hand Simulator</h3>
+              <h3 className="text-sm font-semibold text-gray-300 mb-4">{t('deckBuilder.openingHandSim')}</h3>
               <HandSimulator deckCards={deck.cards} cards={deckCards.size > 0 ? deckCards : cardsMap} />
             </div>
           )}
@@ -373,22 +375,22 @@ export function DeckBuilder() {
 
           {sidePanel === 'export' && (
             <div className="max-w-md space-y-4">
-              <h3 className="text-sm font-semibold text-gray-300">Import / Export</h3>
+              <h3 className="text-sm font-semibold text-gray-300">{t('deckBuilder.importExport')}</h3>
               <DeckImportExport deck={deck} cardsMap={deckCards} />
 
               <div>
-                <label className="text-xs text-gray-500 mb-1 block">Deck Description</label>
+                <label className="text-xs text-gray-500 mb-1 block">{t('deckBuilder.deckDescription')}</label>
                 <textarea
                   value={deck.description ?? ''}
                   onChange={(e) => void updateDeck(deckId, { description: e.target.value })}
-                  placeholder="Describe your deck strategy..."
+                  placeholder={t('deckBuilder.descriptionPlaceholder')}
                   className="w-full bg-card-border/50 text-gray-200 text-sm rounded-lg px-3 py-2 border border-gray-600 focus:outline-none focus:border-accent resize-none"
                   rows={3}
                 />
               </div>
 
               <div>
-                <label className="text-xs text-gray-500 mb-1 block">Tags (comma separated)</label>
+                <label className="text-xs text-gray-500 mb-1 block">{t('deckBuilder.tags')}</label>
                 <input
                   type="text"
                   value={deck.tags.join(', ')}
@@ -397,7 +399,7 @@ export function DeckBuilder() {
                       tags: e.target.value.split(',').map((t) => t.trim()).filter(Boolean),
                     })
                   }
-                  placeholder="e.g. Fire, Control, Meta"
+                  placeholder={t('deckBuilder.tagsPlaceholder')}
                   className="w-full bg-card-border/50 text-gray-200 text-sm rounded-lg px-3 py-2 border border-gray-600 focus:outline-none focus:border-accent"
                 />
               </div>

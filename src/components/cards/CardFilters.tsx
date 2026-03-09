@@ -7,6 +7,7 @@ import { getSets } from '@/api/cardApi';
 import type { PokemonSet } from '@/types/pokemon';
 import { Button } from '@/components/ui/Button';
 import { getTypeClass } from '@/utils/typeColors';
+import { useTranslation } from '@/i18n/LanguageContext';
 
 interface CardFiltersProps {
   filters: SearchFilters;
@@ -15,6 +16,7 @@ interface CardFiltersProps {
 }
 
 export function CardFilters({ filters, onChange, onReset }: CardFiltersProps) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const [sets, setSets] = useState<PokemonSet[]>([]);
 
@@ -38,7 +40,7 @@ export function CardFilters({ filters, onChange, onReset }: CardFiltersProps) {
       >
         <div className="flex items-center gap-2 text-gray-300">
           <Filter size={16} />
-          <span>Filters</span>
+          <span>{t('filters.filters')}</span>
           {activeFilterCount > 0 && (
             <span className="bg-accent text-white text-xs px-1.5 py-0.5 rounded-full">
               {activeFilterCount}
@@ -55,7 +57,7 @@ export function CardFilters({ filters, onChange, onReset }: CardFiltersProps) {
         <div className="px-4 pb-4 space-y-4 border-t border-card-border">
           {/* Format */}
           <div>
-            <p className="text-xs text-gray-500 mb-2 mt-3">Format</p>
+            <p className="text-xs text-gray-500 mb-2 mt-3">{t('filters.format')}</p>
             <div className="flex gap-2">
               {(['all', 'standard', 'expanded'] as const).map((f) => (
                 <button
@@ -76,7 +78,7 @@ export function CardFilters({ filters, onChange, onReset }: CardFiltersProps) {
 
           {/* Supertype */}
           <div>
-            <p className="text-xs text-gray-500 mb-2">Card Type</p>
+            <p className="text-xs text-gray-500 mb-2">{t('filters.cardType')}</p>
             <div className="flex gap-2 flex-wrap">
               {(['Pokémon', 'Trainer', 'Energy'] as const).map((s) => (
                 <button
@@ -104,7 +106,7 @@ export function CardFilters({ filters, onChange, onReset }: CardFiltersProps) {
 
           {/* Types */}
           <div>
-            <p className="text-xs text-gray-500 mb-2">Pokémon Type</p>
+            <p className="text-xs text-gray-500 mb-2">{t('filters.pokemonType')}</p>
             <div className="flex flex-wrap gap-1.5">
               {POKEMON_TYPES.map((type) => (
                 <button
@@ -131,13 +133,13 @@ export function CardFilters({ filters, onChange, onReset }: CardFiltersProps) {
 
           {/* Set */}
           <div>
-            <p className="text-xs text-gray-500 mb-2">Set</p>
+            <p className="text-xs text-gray-500 mb-2">{t('filters.set')}</p>
             <select
               value={filters.setId}
               onChange={(e) => onChange({ setId: e.target.value })}
               className="w-full bg-card-border text-gray-200 text-sm rounded-lg px-3 py-2 border border-gray-600 focus:outline-none focus:border-accent"
             >
-              <option value="">All Sets</option>
+              <option value="">{t('filters.allSets')}</option>
               {sets.map((set) => (
                 <option key={set.id} value={set.id}>
                   {set.name} ({set.series})
@@ -147,7 +149,7 @@ export function CardFilters({ filters, onChange, onReset }: CardFiltersProps) {
           </div>
 
           <Button variant="ghost" size="sm" onClick={onReset} className="w-full">
-            <X size={14} /> Reset Filters
+            <X size={14} /> {t('filters.resetFilters')}
           </Button>
         </div>
       )}
