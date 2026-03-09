@@ -35,8 +35,18 @@ export function buildSearchQuery(filters: SearchFilters): string {
   const parts: string[] = [];
 
   if (filters.query.trim()) {
-    // Search by name or supertype
-    parts.push(`name:"${filters.query.trim()}*"`);
+    const q = filters.query.trim();
+    // Detect number-based queries
+    if (/^\d+$/.test(q)) {
+      // Pure number — search by number or nationalPokedexNumbers
+      parts.push(`(number:${q} OR nationalPokedexNumbers:${q})`);
+    } else if (/^\d+\s*\/\s*\d+$/.test(q)) {
+      // Number/total format
+      const num = q.split('/')[0].trim();
+      parts.push(`number:${num}`);
+    } else {
+      parts.push(`name:"${q}*"`);
+    }
   }
 
   if (filters.types.length > 0) {

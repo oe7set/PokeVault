@@ -189,11 +189,36 @@ function mapSetFull(raw: TcgdexSetFull): PokemonSet {
   };
 }
 
+// Detect if query is a card number pattern (e.g. "25", "25/100", "SV1-25")
+function parseNumberQuery(query: string): { isNumber: boolean; number?: string } {
+  const trimmed = query.trim();
+  // Pure number: "25"
+  if (/^\d+$/.test(trimmed)) {
+    return { isNumber: true, number: trimmed };
+  }
+  // Number/total: "25/100"
+  const slashMatch = trimmed.match(/^(\d+)\s*\/\s*\d+$/);
+  if (slashMatch) {
+    return { isNumber: true, number: slashMatch[1] };
+  }
+  // Set-number: "SV1-25" or "sv1-025"
+  const dashMatch = trimmed.match(/^[a-zA-Z\d]+-(\d+)$/);
+  if (dashMatch) {
+    return { isNumber: true, number: dashMatch[1] };
+  }
+  return { isNumber: false };
+}
+
 function buildQueryParams(filters: SearchFilters): string {
   const params = new URLSearchParams();
+  const query = filters.query.trim();
 
-  if (filters.query.trim()) {
-    params.set('name', filters.query.trim());
+  if (query) {
+    const { isNumber } = parseNumberQuery(query);
+    if (!isNumber) {
+      params.set('name', query);
+    }
+    // Number-only queries are handled separately in searchCards
   }
 
   if (filters.types.length > 0) {
@@ -238,19 +263,51 @@ async function fetchFullCard(id: string): Promise<PokemonCard> {
 export const provider: CardApiProvider = {
   async searchCards(filters, page = 1, pageSize = 20): Promise<SearchResult> {
     let cardIds: TcgdexCardBrief[];
+    const query = filters.query.trim();
+    const { isNumber, number: cardNumber } = parseNumberQuery(query);
 
     if (filters.setId) {
       // Use set endpoint to get cards in a specific set
       const setData = await apiFetch<TcgdexSetFull>(`/sets/${filters.setId}`);
       cardIds = setData.cards ?? [];
-      // Filter by name if query is provided
-      if (filters.query.trim()) {
-        const q = filters.query.trim().toLowerCase();
-        cardIds = cardIds.filter((c) => c.name.toLowerCase().includes(q));
+      // Filter by name or number if query is provided
+      if (query) {
+        const q = query.toLowerCase();
+        cardIds = cardIds.filter((c) =>
+          c.name.toLowerCase().includes(q) || c.localId === q || c.localId === cardNumber,
+        );
+      }
+    } else if (isNumber && cardNumber) {
+      // Number-only query: search across all cards by localId
+      // TCGdex doesn't support direct localId search, so we do a name search
+      // and also try to find by set+number if possible
+      const queryParams = buildQueryParams(filters);
+      if (queryParams) {
+        // Has other filters (type, supertype) — search and filter by number
+        const allCards = await apiFetch<TcgdexCardBrief[]>(`/cards${queryParams}`);
+        cardIds = allCards.filter((c) => c.localId === cardNumber || c.localId === cardNumber.replace(/^0+/, ''));
+      } else {
+        // Pure number search — try name search as fallback (some cards have numbers in names)
+        // Also try Pokedex number search
+        try {
+          const byName = await apiFetch<TcgdexCardBrief[]>(`/cards?name=${encodeURIComponent(query)}`);
+          cardIds = byName;
+        } catch {
+          cardIds = [];
+        }
+        // If no name results, try fetching by dexId
+        if (cardIds.length === 0) {
+          try {
+            const byDex = await apiFetch<TcgdexCardBrief[]>(`/cards?dexId=${cardNumber}`);
+            cardIds = byDex;
+          } catch {
+            // dexId search not supported or failed
+          }
+        }
       }
     } else {
       const queryParams = buildQueryParams(filters);
-      if (!queryParams && !filters.query.trim()) {
+      if (!queryParams && !query) {
         // No filters at all — return empty to avoid fetching ALL cards
         return { data: [], totalCount: 0, page, pageSize, count: 0 };
       }

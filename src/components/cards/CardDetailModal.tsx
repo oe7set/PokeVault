@@ -53,7 +53,14 @@ export function CardDetailModal() {
       )}
 
       {!loading && card && (
-        <div className="flex flex-col md:flex-row gap-6 p-6">
+        <div className="flex flex-col md:flex-row gap-6 p-6 relative">
+          {/* Close button */}
+          <button
+            onClick={() => setCardDetailId(null)}
+            className="absolute top-2 right-2 z-10 text-gray-400 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-card-border/50"
+          >
+            <X size={20} />
+          </button>
           {/* Card Image */}
           <div className="flex flex-col items-center gap-3 md:w-64 shrink-0">
             <div className="relative group cursor-pointer" onClick={() => setShowFullImage(true)}>
