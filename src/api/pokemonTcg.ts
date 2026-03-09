@@ -1,7 +1,8 @@
 import type { PokemonCard, PokemonSet, SearchFilters } from '@/types/pokemon';
 import { db, getCachedCard, setCachedCard, CACHE_TTL } from '@/db/database';
+import type { CardApiProvider } from './cardApi';
 
-const BASE_URL = 'https://api.pokemontcg.io/v2';
+const BASE_URL = '/pokemon-tcg-api';
 
 function getApiKey(): string {
   return import.meta.env.VITE_POKEMON_TCG_API_KEY ?? '';
@@ -161,3 +162,11 @@ export async function getSet(id: string): Promise<PokemonSet | null> {
   const sets = await getSets();
   return sets.find((s) => s.id === id) ?? null;
 }
+
+export const provider: CardApiProvider = {
+  searchCards,
+  getCard,
+  getCards,
+  getSets,
+  getSet,
+};

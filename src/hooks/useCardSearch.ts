@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import { searchCards, type SearchResult } from '@/api/pokemonTcg';
+import { searchCards, type SearchResult } from '@/api/cardApi';
 import type { SearchFilters } from '@/types/pokemon';
 import { addRecentSearch } from '@/db/database';
 

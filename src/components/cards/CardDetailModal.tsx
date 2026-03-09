@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Spinner } from '@/components/ui/Spinner';
 import { useUIStore } from '@/stores/uiStore';
 import { useCollectionStore } from '@/stores/collectionStore';
-import { getCard } from '@/api/pokemonTcg';
+import { getCard } from '@/api/cardApi';
 import type { PokemonCard } from '@/types/pokemon';
 import { formatAttackCost } from '@/utils/cardHelpers';
 import { db } from '@/db/database';

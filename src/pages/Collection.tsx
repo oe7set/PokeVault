@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Search, Filter, Heart, ArrowLeftRight, BookOpen } from 'lucide-react';
 import { db } from '@/db/database';
-import { getCards } from '@/api/pokemonTcg';
+import { getCards } from '@/api/cardApi';
 import type { PokemonCard } from '@/types/pokemon';
 import { CollectionStats } from '@/components/collection/CollectionStats';
 import { CardGrid } from '@/components/cards/CardGrid';

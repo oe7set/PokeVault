@@ -5,7 +5,7 @@ import { Modal } from '@/components/ui/Modal';
 import type { Deck } from '@/types/deck';
 import type { PokemonCard } from '@/types/pokemon';
 import { exportToPTCGLFormat, parsePTCGLFormat, copyToClipboard } from '@/utils/ptcglFormat';
-import { searchCards } from '@/api/pokemonTcg';
+import { searchCards } from '@/api/cardApi';
 import { useUIStore } from '@/stores/uiStore';
 import { useDeckStore } from '@/stores/deckStore';
 import type { SearchFilters } from '@/types/pokemon';

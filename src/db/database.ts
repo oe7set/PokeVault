@@ -36,11 +36,11 @@ class PokeVaultDB extends Dexie {
 
   constructor() {
     super('PokeVaultDB');
-    this.version(1).stores({
+    this.version(2).stores({
       cards_cache: 'id, cachedAt',
       sets_cache: 'id, cachedAt',
       collection: '++id, cardId, inWishlist, inTradeList',
-      decks: '++id, name, format, createdAt',
+      decks: '++id, name, format, createdAt, updatedAt',
       recent_searches: '++id, query, timestamp',
       settings: 'key',
     });

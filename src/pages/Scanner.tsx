@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { Search, Camera } from 'lucide-react';
 import { CameraView } from '@/components/scanner/CameraView';
 import { ScanResultList } from '@/components/scanner/ScanResultList';
-import { searchCards } from '@/api/pokemonTcg';
+import { searchCards } from '@/api/cardApi';
 import type { PokemonCard, SearchFilters } from '@/types/pokemon';
 import { Spinner } from '@/components/ui/Spinner';
 import { Button } from '@/components/ui/Button';

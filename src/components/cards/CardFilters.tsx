@@ -3,7 +3,7 @@ import { Filter, X, ChevronDown } from 'lucide-react';
 import { clsx } from 'clsx';
 import type { SearchFilters } from '@/types/pokemon';
 import { POKEMON_TYPES } from '@/types/pokemon';
-import { getSets } from '@/api/pokemonTcg';
+import { getSets } from '@/api/cardApi';
 import type { PokemonSet } from '@/types/pokemon';
 import { Button } from '@/components/ui/Button';
 import { getTypeClass } from '@/utils/typeColors';

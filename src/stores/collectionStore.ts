@@ -8,6 +8,7 @@ interface CollectionStore {
   removeCard: (cardId: string, quantity?: number, foil?: boolean) => Promise<void>;
   updateEntry: (cardId: string, update: Partial<CollectionEntry>) => Promise<void>;
   toggleWishlist: (cardId: string) => Promise<void>;
+  addToWishlist: (cardId: string) => Promise<void>;
   toggleTradeList: (cardId: string) => Promise<void>;
   getEntry: (cardId: string) => Promise<CollectionEntry | null>;
 }
@@ -70,6 +71,25 @@ export const useCollectionStore = create<CollectionStore>(() => ({
     const existing = await db.collection.where('cardId').equals(cardId).first();
     if (existing) {
       await db.collection.update(existing.id!, { inWishlist: !existing.inWishlist });
+    } else {
+      await db.collection.add({
+        cardId,
+        quantity: 0,
+        quantityFoil: 0,
+        condition: 'NM',
+        addedAt: new Date().toISOString(),
+        inWishlist: true,
+        inTradeList: false,
+      });
+    }
+  },
+
+  addToWishlist: async (cardId) => {
+    const existing = await db.collection.where('cardId').equals(cardId).first();
+    if (existing) {
+      if (!existing.inWishlist) {
+        await db.collection.update(existing.id!, { inWishlist: true });
+      }
     } else {
       await db.collection.add({
         cardId,

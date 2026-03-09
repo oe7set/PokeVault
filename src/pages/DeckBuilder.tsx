@@ -1,30 +1,35 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { Search, ArrowLeft, Plus, Minus, Sparkles, BarChart2, Download } from 'lucide-react';
+import { Search, ArrowLeft, Sparkles, BarChart2, Download, Library, Hand, AlertTriangle } from 'lucide-react';
 import { db } from '@/db/database';
 import { useDeckStore } from '@/stores/deckStore';
+import { useCollectionStore } from '@/stores/collectionStore';
 import { useUIStore } from '@/stores/uiStore';
 import { useCardSearch } from '@/hooks/useCardSearch';
 import { useDeckWithCards } from '@/hooks/useDeckValidation';
-import { getCards } from '@/api/pokemonTcg';
+import { useDeckCollection } from '@/hooks/useDeckCollection';
+import { getCards } from '@/api/cardApi';
 import type { PokemonCard } from '@/types/pokemon';
 import type { DeckFormat } from '@/types/deck';
 import { CardGrid } from '@/components/cards/CardGrid';
+import { CardFilters } from '@/components/cards/CardFilters';
 import { DeckValidator } from '@/components/deck/DeckValidator';
 import { DeckStatsPanel } from '@/components/deck/DeckStatsPanel';
 import { AIAdvisorPanel } from '@/components/deck/AIAdvisorPanel';
 import { DeckImportExport } from '@/components/deck/DeckImportExport';
+import { DeckCardRow } from '@/components/deck/DeckCardRow';
+import { HandSimulator } from '@/components/deck/HandSimulator';
 import { Spinner } from '@/components/ui/Spinner';
-import { Badge } from '@/components/ui/Badge';
 import { clsx } from 'clsx';
 
-type SidePanel = 'cards' | 'stats' | 'ai' | 'export';
+type SidePanel = 'cards' | 'collection' | 'stats' | 'hand' | 'ai' | 'export';
 
 export function DeckBuilder() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { addCardToDeck, removeCardFromDeck, setCardCount, updateDeck } = useDeckStore();
+  const { addToWishlist } = useCollectionStore();
   const { addToast } = useUIStore();
   const [sidePanel, setSidePanel] = useState<SidePanel>('cards');
   const [searchQuery, setSearchQuery] = useState('');
@@ -33,8 +38,30 @@ export function DeckBuilder() {
   const deckId = parseInt(id ?? '0', 10);
   const deck = useLiveQuery(() => db.decks.get(deckId), [deckId]);
   const { cardsMap, validation, stats } = useDeckWithCards(deck ?? null);
+  const { collectionMap, overlays, missingCards, totalMissing, totalMissingValue } = useDeckCollection(deck ?? null, deckCards);
 
-  const { results, loading: searchLoading, updateFilters } = useCardSearch();
+  const { results, loading: searchLoading, filters, updateFilters } = useCardSearch();
+
+  // Collection cards for "Collection" tab
+  const collectionEntries = useLiveQuery(() => db.collection.toArray(), []);
+  const [collectionCards, setCollectionCards] = useState<PokemonCard[]>([]);
+
+  useEffect(() => {
+    if (!collectionEntries?.length) {
+      setCollectionCards([]);
+      return;
+    }
+    const ids = collectionEntries.filter((e) => e.quantity + e.quantityFoil > 0).map((e) => e.cardId);
+    if (ids.length === 0) { setCollectionCards([]); return; }
+    void getCards(ids).then(setCollectionCards);
+  }, [collectionEntries]);
+
+  // Filter collection cards by search query
+  const filteredCollectionCards = useMemo(() => {
+    if (!searchQuery.trim()) return collectionCards;
+    const q = searchQuery.toLowerCase();
+    return collectionCards.filter((c) => c.name.toLowerCase().includes(q));
+  }, [collectionCards, searchQuery]);
 
   // Load deck cards
   useEffect(() => {
@@ -53,6 +80,28 @@ export function DeckBuilder() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Build overlay map for quick lookup
+  const overlayMap = useMemo(() => {
+    const map = new Map<string, (typeof overlays)[number]>();
+    for (const o of overlays) map.set(o.cardId, o);
+    return map;
+  }, [overlays]);
+
+  // Group deck cards by supertype
+  const groupedDeckCards = useMemo(() => {
+    if (!deck) return { 'Pokémon': [], 'Trainer': [], 'Energy': [] } as Record<string, { cardId: string; count: number }[]>;
+    const groups: Record<string, typeof deck.cards> = { 'Pokémon': [], 'Trainer': [], 'Energy': [] };
+    for (const dc of deck.cards) {
+      const card = deckCards.get(dc.cardId);
+      const type = card?.supertype ?? 'Other';
+      const key = type === 'Trainer' ? 'Trainer' : type;
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(dc);
+    }
+    return groups;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deck?.cards, deckCards]);
+
   if (!deck) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -65,7 +114,6 @@ export function DeckBuilder() {
     const existing = deck.cards.find((c) => c.cardId === card.id);
     const currentCount = existing?.count ?? 0;
 
-    // Enforce 4-copy rule (with basic energy exception)
     const isBasicEnergy = card.supertype === 'Energy' && card.subtypes?.includes('Basic');
     if (!isBasicEnergy && currentCount >= 4) {
       addToast(`Max 4 copies of ${card.name} allowed`, 'error');
@@ -74,6 +122,13 @@ export function DeckBuilder() {
 
     await addCardToDeck(deckId, card.id);
     setDeckCards((prev) => new Map(prev).set(card.id, card));
+
+    // Auto-wishlist only if collection doesn't cover the new deck count
+    const owned = collectionMap.get(card.id) ?? 0;
+    const newCount = currentCount + 1;
+    if (owned < newCount) {
+      await addToWishlist(card.id);
+    }
   };
 
   const handleRemoveCard = async (cardId: string) => {
@@ -86,20 +141,28 @@ export function DeckBuilder() {
     }
   };
 
+  const handleSetCount = async (cardId: string, count: number) => {
+    const card = deckCards.get(cardId);
+    if (!card) return;
+    const isBasicEnergy = card.supertype === 'Energy' && card.subtypes?.includes('Basic');
+    if (!isBasicEnergy && count > 4) return;
+    if (count <= 0) {
+      await removeCardFromDeck(deckId, cardId);
+    } else {
+      await setCardCount(deckId, cardId, count);
+    }
+  };
+
   const totalCards = deck.cards.reduce((s, dc) => s + dc.count, 0);
 
-  // Group deck cards by supertype
-  const groupedDeckCards = useMemo(() => {
-    const groups: Record<string, typeof deck.cards> = { 'Pokémon': [], 'Trainer': [], 'Energy': [] };
-    for (const dc of deck.cards) {
-      const card = deckCards.get(dc.cardId);
-      const type = card?.supertype ?? 'Other';
-      const key = type === 'Trainer' ? 'Trainer' : type;
-      if (!groups[key]) groups[key] = [];
-      groups[key].push(dc);
-    }
-    return groups;
-  }, [deck.cards, deckCards]);
+  const tabs = [
+    { key: 'cards' as const, icon: Search, label: 'Cards' },
+    { key: 'collection' as const, icon: Library, label: 'Collection' },
+    { key: 'stats' as const, icon: BarChart2, label: 'Stats' },
+    { key: 'hand' as const, icon: Hand, label: 'Hand' },
+    { key: 'ai' as const, icon: Sparkles, label: 'AI Tips' },
+    { key: 'export' as const, icon: Download, label: 'Export' },
+  ];
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -142,6 +205,19 @@ export function DeckBuilder() {
           </div>
         )}
 
+        {/* Missing cards banner */}
+        {totalMissing > 0 && (
+          <button
+            onClick={() => setSidePanel('stats')}
+            className="mx-4 mt-2 flex items-center gap-2 bg-yellow-900/20 border border-yellow-700/30 rounded-lg px-3 py-2 text-left hover:bg-yellow-900/30 transition-colors"
+          >
+            <AlertTriangle size={14} className="text-yellow-400 shrink-0" />
+            <span className="text-[10px] text-yellow-300">
+              Missing {totalMissing} cards {totalMissingValue > 0 && `(~$${totalMissingValue.toFixed(2)})`}
+            </span>
+          </button>
+        )}
+
         {/* Deck Cards */}
         <div className="flex-1 overflow-y-auto p-3 space-y-3">
           {Object.entries(groupedDeckCards).map(([supertype, deckCardList]) => {
@@ -154,41 +230,21 @@ export function DeckBuilder() {
                   <span>{count}</span>
                 </p>
                 <div className="space-y-1">
-                  {deckCardList.map((dc) => {
-                    const card = deckCards.get(dc.cardId);
-                    return (
-                      <div
-                        key={dc.cardId}
-                        className="flex items-center gap-2 bg-card-bg/60 rounded-lg px-2 py-1.5 group"
-                      >
-                        {card?.images.small && (
-                          <img src={card.images.small} alt={card.name} className="w-7 h-10 object-cover rounded" />
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs text-white truncate">{card?.name ?? dc.cardId}</p>
-                          {card?.types && (
-                            <div className="flex gap-0.5 mt-0.5">
-                              {card.types.map((t) => (
-                                <Badge key={t} variant="type" type={t} className="text-[9px]">{t}</Badge>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={() => void handleRemoveCard(dc.cardId)} className="text-gray-400 hover:text-red-400 transition-colors">
-                            <Minus size={12} />
-                          </button>
-                          <span className="text-white text-xs font-bold w-4 text-center">{dc.count}</span>
-                          <button onClick={() => card && void handleAddCard(card)} className="text-gray-400 hover:text-green-400 transition-colors">
-                            <Plus size={12} />
-                          </button>
-                        </div>
-                        {!deckCards.get(dc.cardId) && (
-                          <span className="text-accent font-bold text-xs">{dc.count}</span>
-                        )}
-                      </div>
-                    );
-                  })}
+                  {deckCardList.map((dc) => (
+                    <DeckCardRow
+                      key={dc.cardId}
+                      cardId={dc.cardId}
+                      count={dc.count}
+                      card={deckCards.get(dc.cardId)}
+                      overlay={overlayMap.get(dc.cardId)}
+                      onAdd={() => {
+                        const card = deckCards.get(dc.cardId);
+                        if (card) void handleAddCard(card);
+                      }}
+                      onRemove={() => void handleRemoveCard(dc.cardId)}
+                      onSetCount={(n) => void handleSetCount(dc.cardId, n)}
+                    />
+                  ))}
                 </div>
               </div>
             );
@@ -196,28 +252,22 @@ export function DeckBuilder() {
 
           {deck.cards.length === 0 && (
             <div className="text-center py-8 text-gray-500">
-              <p className="text-3xl mb-2">🃏</p>
               <p className="text-sm">Search cards and add them to your deck</p>
             </div>
           )}
         </div>
       </div>
 
-      {/* Right: Card Search + Panels */}
+      {/* Right: Panels */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Panel tabs */}
-        <div className="flex border-b border-card-border bg-[#0d0d1a] shrink-0">
-          {([
-            { key: 'cards', icon: Search, label: 'Cards' },
-            { key: 'stats', icon: BarChart2, label: 'Stats' },
-            { key: 'ai', icon: Sparkles, label: 'AI Tips' },
-            { key: 'export', icon: Download, label: 'Export' },
-          ] as const).map(({ key, icon: Icon, label }) => (
+        <div className="flex border-b border-card-border bg-[#0d0d1a] shrink-0 overflow-x-auto">
+          {tabs.map(({ key, icon: Icon, label }) => (
             <button
               key={key}
               onClick={() => setSidePanel(key)}
               className={clsx(
-                'flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors border-b-2',
+                'flex items-center gap-1.5 px-3 py-3 text-sm font-medium transition-colors border-b-2 whitespace-nowrap',
                 sidePanel === key
                   ? 'border-accent text-accent'
                   : 'border-transparent text-gray-500 hover:text-gray-300',
@@ -246,6 +296,14 @@ export function DeckBuilder() {
                   className="w-full bg-card-bg border border-card-border text-white rounded-xl pl-9 pr-4 py-2.5 focus:outline-none focus:border-accent text-sm"
                 />
               </div>
+              <CardFilters
+                filters={filters}
+                onChange={updateFilters}
+                onReset={() => {
+                  setSearchQuery('');
+                  updateFilters({ query: '', types: [], supertypes: [], subtypes: [], setId: '', rarity: '', format: 'all' });
+                }}
+              />
               <CardGrid
                 cards={results?.data ?? []}
                 loading={searchLoading}
@@ -256,10 +314,54 @@ export function DeckBuilder() {
             </div>
           )}
 
+          {sidePanel === 'collection' && (
+            <div className="space-y-3">
+              <div className="relative">
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Filter your collection..."
+                  className="w-full bg-card-bg border border-card-border text-white rounded-xl pl-9 pr-4 py-2.5 focus:outline-none focus:border-accent text-sm"
+                />
+              </div>
+              {filteredCollectionCards.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <p className="text-sm">
+                    {collectionCards.length === 0
+                      ? 'Your collection is empty. Add cards from the Collection page first.'
+                      : 'No cards match your search.'}
+                  </p>
+                </div>
+              ) : (
+                <CardGrid
+                  cards={filteredCollectionCards}
+                  loading={false}
+                  onAddToDeck={handleAddCard}
+                  columns={5}
+                  compact={false}
+                />
+              )}
+            </div>
+          )}
+
           {sidePanel === 'stats' && stats && (
             <div className="max-w-md">
               <h3 className="text-sm font-semibold text-gray-300 mb-4">Deck Analysis</h3>
-              <DeckStatsPanel stats={stats} />
+              <DeckStatsPanel
+                stats={stats}
+                deck={deck}
+                missingCards={missingCards}
+                totalMissingValue={totalMissingValue}
+              />
+            </div>
+          )}
+
+          {sidePanel === 'hand' && (
+            <div className="max-w-lg">
+              <h3 className="text-sm font-semibold text-gray-300 mb-4">Opening Hand Simulator</h3>
+              <HandSimulator deckCards={deck.cards} cards={deckCards.size > 0 ? deckCards : cardsMap} />
             </div>
           )}
 
@@ -274,7 +376,6 @@ export function DeckBuilder() {
               <h3 className="text-sm font-semibold text-gray-300">Import / Export</h3>
               <DeckImportExport deck={deck} cardsMap={deckCards} />
 
-              {/* Description */}
               <div>
                 <label className="text-xs text-gray-500 mb-1 block">Deck Description</label>
                 <textarea
@@ -286,7 +387,6 @@ export function DeckBuilder() {
                 />
               </div>
 
-              {/* Tags */}
               <div>
                 <label className="text-xs text-gray-500 mb-1 block">Tags (comma separated)</label>
                 <input

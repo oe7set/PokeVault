@@ -7,7 +7,7 @@ import type { CardCondition } from '@/types/collection';
 import { CONDITION_LABELS } from '@/types/collection';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '@/db/database';
-import { getCard } from '@/api/pokemonTcg';
+import { getCard } from '@/api/cardApi';
 import { useEffect } from 'react';
 import type { PokemonCard } from '@/types/pokemon';
 
