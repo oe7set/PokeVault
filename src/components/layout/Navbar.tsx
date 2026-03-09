@@ -2,9 +2,10 @@ import { NavLink } from 'react-router-dom';
 import { Home, Search, BookOpen, Layers, Camera, Settings, Zap } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useTranslation } from '@/i18n/LanguageContext';
+import { LOCALES } from '@/i18n/translations';
 
 export function Navbar() {
-  const { t } = useTranslation();
+  const { t, locale, setLocale } = useTranslation();
 
   const navItems = [
     { to: '/', icon: Home, label: t('nav.dashboard'), exact: true },
@@ -51,8 +52,25 @@ export function Navbar() {
         ))}
       </nav>
 
-      {/* Settings */}
+      {/* Language & Settings */}
       <div className="p-3 border-t border-card-border">
+        <div className="flex flex-wrap justify-center gap-1 mb-2">
+          {LOCALES.map((loc) => (
+            <button
+              key={loc.code}
+              onClick={() => setLocale(loc.code)}
+              className={clsx(
+                'text-sm px-1.5 py-0.5 rounded transition-colors',
+                locale === loc.code
+                  ? 'bg-accent/20 ring-1 ring-accent'
+                  : 'hover:bg-card-hover',
+              )}
+              title={loc.label}
+            >
+              {loc.flag}
+            </button>
+          ))}
+        </div>
         <NavLink
           to="/settings"
           className={({ isActive }) =>
